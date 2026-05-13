@@ -149,11 +149,11 @@ export default function FloatingChatStaff() {
                     {conv.avatar}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-semibold text-stone-700 truncate">{conv.ortuName}</p>
-                    <p className="text-[10px] text-stone-400 truncate">{conv.lastMessage}</p>
+                    <p className="text-[11px] font-semibold text-[#1A1A1A] truncate">{conv.ortuName}</p>
+                    <p className="text-[10px] text-[#4A4A4A] truncate">{conv.lastMessage}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                    <p className="text-[9px] text-stone-400">{conv.lastTime}</p>
+                    <p className="text-[9px] text-[#4A4A4A]">{conv.lastTime}</p>
                     {conv.unread > 0 && (
                       <span className="w-4 h-4 bg-sage-green rounded-full text-[8px] font-bold text-white flex items-center justify-center">
                         {conv.unread}
@@ -166,16 +166,16 @@ export default function FloatingChatStaff() {
           ) : (
             <>
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 bg-[#F5F0EB]">
+              <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 bg-[#FFFDF7]">
                 {activeConv.messages.map((msg) => (
                   <div key={msg.id} className={`flex flex-col ${msg.from === "pengasuh" ? "items-end" : "items-start"}`}>
                     <div className={`max-w-[85%] px-3 py-2 rounded-2xl text-[11px] leading-snug shadow-sm
                       ${msg.from === "pengasuh"
                         ? "bg-sage-green text-white rounded-br-sm"
-                        : "bg-white text-stone-700 rounded-bl-sm border border-stone-100"}`}>
+                        : "bg-white text-[#1A1A1A] rounded-bl-sm border border-stone-100"}`}>
                       {msg.text}
                     </div>
-                    <p className="text-[9px] text-stone-400 mt-0.5 px-1">{msg.time}</p>
+                    <p className="text-[9px] text-[#4A4A4A] mt-0.5 px-1">{msg.time}</p>
                   </div>
                 ))}
               </div>

@@ -15,8 +15,8 @@ const rapor = {
       { label: "Bermain Kooperatif", pencapaian: 85 },
     ],
     kegiatan: [
-      { label: "Mengaji",        pencapaian: 80 },
-      { label: "Latihan Sholat", pencapaian: 70 },
+      { label: "membaca",        pencapaian: 80 },
+      { label: "Mewarnai", pencapaian: 70 },
     ],
     catatan: "Anak 1 menunjukkan perkembangan yang sangat baik bulan ini. Kemampuan bersosialisasi meningkat pesat dan sudah mulai percaya diri dalam mengikuti kegiatan bersama.",
   },
@@ -30,10 +30,10 @@ const rapor = {
       { label: "Bermain Kooperatif", pencapaian: 80 },
     ],
     kegiatan: [
-      { label: "Mengaji",        pencapaian: 75 },
-      { label: "Latihan Sholat", pencapaian: 65 },
+      { label: "membaca",        pencapaian: 75 },
+      { label: "Mewarnai", pencapaian: 65 },
     ],
-    catatan: "Anak 1 mulai menunjukkan kemandirian yang lebih baik. Perlu perhatian lebih pada kemampuan makan dan mengaji.",
+    catatan: "Anak 1 mulai menunjukkan kemandirian yang lebih baik. Perlu perhatian lebih pada kemampuan makan dan membaca.",
   },
 };
 
@@ -58,7 +58,7 @@ export default function RaporOrangTuaPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-[18px] font-bold text-stone-800">Rapor Perkembangan</h1>
-        <p className="text-[11px] text-stone-400 mt-0.5">Rekap perkembangan bulanan Anak 1</p>
+        <p className="text-[11px] text-[#4A4A4A] mt-0.5">Rekap perkembangan bulanan Anak 1</p>
       </div>
 
       {/* Month selector */}
@@ -92,16 +92,16 @@ export default function RaporOrangTuaPage() {
               { label: "Persentase",      value: `${Math.round((data.kehadiran/data.totalHari)*100)}%`, sub: "Tingkat kehadiran", bg: "bg-pastel-blue/30", text: "text-blue-500"   },
             ].map((s) => (
               <div key={s.label} className={`${s.bg} rounded-2xl p-5 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-default`}>
-                <p className="text-[9px] font-bold uppercase tracking-[1.5px] text-stone-400 mb-1">{s.label}</p>
+                <p className="text-[9px] font-bold uppercase tracking-[1.5px] text-[#4A4A4A] mb-1">{s.label}</p>
                 <p className={`text-3xl font-bold ${s.text} leading-none mb-1`}>{s.value}</p>
-                <p className="text-[10px] text-stone-400">{s.sub}</p>
+                <p className="text-[10px] text-[#4A4A4A]">{s.sub}</p>
               </div>
             ))}
           </div>
 
           {/* Rutinitas progress */}
           <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5 space-y-4">
-            <p className="text-[10px] font-bold uppercase tracking-[1.5px] text-stone-400">Rutinitas Harian</p>
+            <p className="text-[10px] font-bold uppercase tracking-[1.5px] text-[#4A4A4A]">Rutinitas Harian</p>
             {data.rutinitas.map((r) => (
               <div key={r.label}>
                 <div className="flex justify-between mb-1">
@@ -115,7 +115,7 @@ export default function RaporOrangTuaPage() {
 
           {/* Kegiatan khusus */}
           <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5 space-y-4">
-            <p className="text-[10px] font-bold uppercase tracking-[1.5px] text-stone-400">Kegiatan Khusus</p>
+            <p className="text-[10px] font-bold uppercase tracking-[1.5px] text-[#4A4A4A]">Kegiatan Khusus</p>
             {data.kegiatan.map((k) => (
               <div key={k.label}>
                 <div className="flex justify-between mb-1">
@@ -129,7 +129,7 @@ export default function RaporOrangTuaPage() {
 
           {/* Catatan pengasuh */}
           <div className="bg-white rounded-2xl shadow-sm border border-stone-100 p-5">
-            <p className="text-[10px] font-bold uppercase tracking-[1.5px] text-stone-400 mb-2">Catatan Pengasuh</p>
+            <p className="text-[10px] font-bold uppercase tracking-[1.5px] text-[#4A4A4A] mb-2">Catatan Pengasuh</p>
             <p className="text-[12px] text-stone-600 leading-relaxed">{data.catatan}</p>
           </div>
         </>
