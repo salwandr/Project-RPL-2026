@@ -1,4 +1,3 @@
-// app/dashboard/orang-tua/layout.tsx
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -59,35 +58,19 @@ const MOCK_MESSAGES = [
   { id: 4, from: "ortu",     text: "Siap bu, terima kasih infonya!",                          time: "08:20" },
 ];
 
-// ── Floating Chat ─────────────────────────────────────────────────────────────
 function FloatingChat() {
   const [open, setOpen]         = useState(false);
   const [messages, setMessages] = useState(MOCK_MESSAGES);
   const [input, setInput]       = useState("");
   const [unread, setUnread]     = useState(1);
-  const [isMobile, setIsMobile] = useState(false);
-  const router                  = useRouter();
   const bottomRef               = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-
-  useEffect(() => {
-    if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, open]);
-
-  const handleOpen = () => {
-    if (isMobile) {
-      router.push("/dashboard/orang-tua/chat");
-    } else {
-      setOpen(true);
+    if (open) {
       setUnread(0);
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
     }
-  };
+  }, [messages, open]);
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -102,9 +85,12 @@ function FloatingChat() {
 
   return (
     <>
-      {/* Chat popup — desktop only */}
-      {open && !isMobile && (
-        <div className="fixed bottom-24 right-6 w-80 bg-white rounded-3xl shadow-2xl border border-[#FFE26F]/30 flex flex-col overflow-hidden z-50" style={{ height: "440px" }}>
+      {/* Chat popup — muncul ke atas dari tombol, selalu di kanan bawah */}
+      {open && (
+        <div
+          className="fixed z-50 w-80 bg-white rounded-3xl shadow-2xl border border-[#FFE26F]/30 flex flex-col overflow-hidden"
+          style={{ bottom: "160px", right: "80px", height: "440px" }}
+        >
           {/* Header */}
           <div className="bg-[#1883FF] px-4 py-3 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2.5">
@@ -147,37 +133,51 @@ function FloatingChat() {
           </div>
 
           {/* Input */}
-          <div className="px-3 py-2.5 bg-white border-t border-[#FFE26F]/30 flex items-center gap-2 flex-shrink-0">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ketik pesan..."
-              className="flex-1 text-[11px] bg-[#FFFDF7] border border-[#FFE26F] rounded-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1883FF]/20 placeholder:text-[#4A4A4A]/30 text-[#1A1A1A]"
-            />
-            <button
-              onClick={handleSend}
-              disabled={!input.trim()}
-              className="w-8 h-8 rounded-full bg-[#1883FF] flex items-center justify-center text-white shadow-sm hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-              </svg>
-            </button>
+          <div className="px-3 py-2.5 bg-white border-t border-[#FFE26F]/30 flex-shrink-0">
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ketik pesan..."
+                className="w-full text-[12px] bg-[#F7F5F0] border border-[#FFE26F]/60 rounded-2xl pl-4 pr-12 py-3 focus:outline-none focus:border-[#1883FF]/40 placeholder:text-[#4A4A4A]/30 text-[#1A1A1A]"
+                style={{ fontFamily: "'Montserrat', sans-serif" }}
+              />
+              <button
+                onClick={handleSend}
+                disabled={!input.trim()}
+                className={`absolute right-2 w-8 h-8 rounded-xl flex items-center justify-center transition-all
+                  ${input.trim()
+                    ? "text-[#1883FF] hover:bg-[#1883FF]/10 active:scale-95"
+                    : "text-[#4A4A4A]/30 cursor-not-allowed"}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Floating button — desktop only (mobile pakai bottom nav chat) */}
+      {/* Floating button */}
       <button
-        onClick={handleOpen}
-        className="hidden md:flex fixed bottom-6 right-6 w-14 h-14 bg-[#1883FF] rounded-full shadow-lg shadow-[#1883FF]/30 hover:shadow-xl hover:scale-105 active:scale-95 transition-all items-center justify-center z-50 relative"
+        onClick={() => setOpen((o) => !o)}
+        className={`fixed z-50 w-14 h-14 rounded-2xl shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95
+          ${open ? "bg-[#1A1A1A]" : "bg-[#1883FF] shadow-[#1883FF]/30"}`}
+        style={{ bottom: "80px", right: "20px" }}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-        {unread > 0 && (
+        {open ? (
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+        )}
+        {!open && unread > 0 && (
           <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FFA9DD] rounded-full text-[9px] font-bold text-white flex items-center justify-center shadow-sm animate-pulse">
             {unread}
           </span>
@@ -187,20 +187,14 @@ function FloatingChat() {
   );
 }
 
-// ── Layout ────────────────────────────────────────────────────────────────────
 export default function OrangTuaLayout({ children }: { children: React.ReactNode }) {
   const pathname    = usePathname();
   const router      = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Tutup menu saat navigasi
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
 
-  // Halaman daftar/* punya header sendiri, jangan tampilkan navbar layout
   const isDaftarPage = pathname.startsWith("/dashboard/orang-tua/daftar");
-
   if (isDaftarPage) {
     return (
       <div className="min-h-screen bg-[#FFFDF7]" style={{ fontFamily: "'Montserrat', sans-serif" }}>
@@ -212,7 +206,7 @@ export default function OrangTuaLayout({ children }: { children: React.ReactNode
   return (
     <div className="min-h-screen bg-[#FFFDF7] flex flex-col" style={{ fontFamily: "'Montserrat', sans-serif" }}>
 
-      {/* ── Navbar ── */}
+      {/* Navbar */}
       <header className="bg-white border-b border-[#FFE26F]/40 sticky top-0 z-30 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between gap-3">
 
@@ -232,9 +226,7 @@ export default function OrangTuaLayout({ children }: { children: React.ReactNode
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1 h-full">
             {navTabs.map(({ href, label, icon }) => {
-              const active = href === "/dashboard/orang-tua"
-                ? pathname === href
-                : pathname.startsWith(href);
+              const active = href === "/dashboard/orang-tua" ? pathname === href : pathname.startsWith(href);
               return (
                 <button
                   key={href}
@@ -250,9 +242,8 @@ export default function OrangTuaLayout({ children }: { children: React.ReactNode
             })}
           </nav>
 
-          {/* Right: status + user + hamburger */}
+          {/* Right */}
           <div className="flex items-center gap-2">
-            {/* Status anak — mobile versi compact */}
             <div className="flex items-center gap-1.5 bg-[#C4E02F]/15 border border-[#C4E02F]/40 rounded-full px-2.5 md:px-3 py-1 md:py-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[#C4E02F] animate-pulse shrink-0" />
               <span className="text-[10px] md:text-[11px] font-semibold text-[#1A1A1A]">
@@ -260,18 +251,14 @@ export default function OrangTuaLayout({ children }: { children: React.ReactNode
               </span>
             </div>
 
-            {/* User chip — desktop only */}
             <div className="hidden md:flex items-center gap-2 bg-[#FFFDF7] border border-[#FFE26F] rounded-full pl-2 pr-4 py-1.5">
-              <div className="w-7 h-7 rounded-full bg-[#1883FF]/15 border-2 border-[#1883FF] flex items-center justify-center text-[9px] font-bold text-[#1883FF]">
-                BW
-              </div>
+              <div className="w-7 h-7 rounded-full bg-[#1883FF]/15 border-2 border-[#1883FF] flex items-center justify-center text-[9px] font-bold text-[#1883FF]">BW</div>
               <div>
                 <p className="text-[11px] font-bold text-[#1A1A1A] leading-none">Budi Wali</p>
                 <p className="text-[9px] text-[#4A4A4A]">Orang Tua</p>
               </div>
             </div>
 
-            {/* Logout — desktop only */}
             <button
               onClick={() => router.push("/login")}
               className="hidden md:flex w-8 h-8 rounded-full bg-red-50 items-center justify-center text-red-400 hover:bg-red-100 transition-colors"
@@ -282,11 +269,10 @@ export default function OrangTuaLayout({ children }: { children: React.ReactNode
               </svg>
             </button>
 
-            {/* Hamburger — mobile */}
+            {/* Hamburger */}
             <button
               className="md:hidden w-9 h-9 flex flex-col items-center justify-center gap-1.5"
               onClick={() => setMenuOpen(!menuOpen)}
-              aria-label="Menu"
             >
               <span className={`block w-5 h-0.5 bg-[#1A1A1A] transition-all duration-200 ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
               <span className={`block w-5 h-0.5 bg-[#1A1A1A] transition-all duration-200 ${menuOpen ? "opacity-0" : ""}`} />
@@ -295,10 +281,9 @@ export default function OrangTuaLayout({ children }: { children: React.ReactNode
           </div>
         </div>
 
-        {/* Mobile dropdown menu */}
+        {/* Mobile dropdown */}
         {menuOpen && (
           <div className="md:hidden bg-white border-t border-[#FFE26F]/30 px-4 py-3 space-y-1 shadow-lg">
-            {/* User info */}
             <div className="flex items-center justify-between py-3 mb-1 border-b border-[#F0EDE6]">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-full bg-[#1883FF]/15 border-2 border-[#1883FF] flex items-center justify-center text-[11px] font-bold text-[#1883FF]">BW</div>
@@ -307,27 +292,18 @@ export default function OrangTuaLayout({ children }: { children: React.ReactNode
                   <p className="text-[11px] text-[#4A4A4A]">Orang Tua · Almira Zahra</p>
                 </div>
               </div>
-              <button
-                onClick={() => router.push("/login")}
-                className="text-[12px] text-red-400 font-semibold px-3 py-1.5 bg-red-50 rounded-xl"
-              >
+              <button onClick={() => router.push("/login")} className="text-[12px] text-red-400 font-semibold px-3 py-1.5 bg-red-50 rounded-xl">
                 Keluar
               </button>
             </div>
-
-            {/* Nav items */}
             {navTabs.map(({ href, label, icon }) => {
-              const active = href === "/dashboard/orang-tua"
-                ? pathname === href
-                : pathname.startsWith(href);
+              const active = href === "/dashboard/orang-tua" ? pathname === href : pathname.startsWith(href);
               return (
                 <button
                   key={href}
                   onClick={() => router.push(href)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[14px] font-semibold transition-all
-                    ${active
-                      ? "bg-[#1883FF] text-white"
-                      : "text-[#4A4A4A] hover:bg-[#FFE26F]/20"}`}
+                    ${active ? "bg-[#1883FF] text-white" : "text-[#4A4A4A] hover:bg-[#FFE26F]/20"}`}
                 >
                   {icon} {label}
                 </button>
@@ -337,18 +313,15 @@ export default function OrangTuaLayout({ children }: { children: React.ReactNode
         )}
       </header>
 
-      {/* ── Content ── */}
-      {/* pb-20 supaya konten tidak tertutup bottom nav di mobile */}
+      {/* Content */}
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 md:px-6 py-4 md:py-8 pb-24 md:pb-8">
         {children}
       </main>
 
-      {/* ── Bottom nav — mobile only ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#FFE26F]/40 z-20 flex safe-bottom">
+      {/* Bottom nav — mobile only */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#FFE26F]/40 z-20 flex">
         {navTabs.map(({ href, label, icon }) => {
-          const active = href === "/dashboard/orang-tua"
-            ? pathname === href
-            : pathname.startsWith(href);
+          const active = href === "/dashboard/orang-tua" ? pathname === href : pathname.startsWith(href);
           return (
             <button
               key={href}
@@ -356,20 +329,15 @@ export default function OrangTuaLayout({ children }: { children: React.ReactNode
               className={`flex-1 flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold transition-colors relative
                 ${active ? "text-[#1883FF]" : "text-[#4A4A4A]"}`}
             >
-              {/* Active pill background */}
-              {active && (
-                <span className="absolute top-1.5 w-10 h-8 bg-[#1883FF]/10 rounded-xl" />
-              )}
-              <span className={`relative z-10 ${active ? "text-[#1883FF]" : "text-[#4A4A4A]"}`}>
-                {icon}
-              </span>
+              {active && <span className="absolute top-1.5 w-10 h-8 bg-[#1883FF]/10 rounded-xl" />}
+              <span className={`relative z-10 ${active ? "text-[#1883FF]" : "text-[#4A4A4A]"}`}>{icon}</span>
               <span className="relative z-10">{label}</span>
             </button>
           );
         })}
       </nav>
 
-      {/* ── Floating Chat — desktop only ── */}
+      {/* Floating Chat — selalu kanan bawah */}
       <FloatingChat />
     </div>
   );

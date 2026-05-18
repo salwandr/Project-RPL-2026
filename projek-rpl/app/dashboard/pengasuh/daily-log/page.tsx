@@ -1,315 +1,647 @@
 "use client";
 
-import { useState } from "react";
-import { Search, BookOpen, CheckCircle2, ChevronLeft, Star, Upload, Clock } from "lucide-react";
+import { useState, useRef } from "react";
 
-interface Child {
+type Mood = "senang" | "biasa" | "rewel" | "mengantuk" | "";
+type PortiMakan = "habis" | "setengah" | "sedikit" | "tidak";
+type ToiletStatus = "mandiri" | "dibantu" | "belum" | "tidak";
+
+type LogForm = {
+  makan_pagi_porsi: PortiMakan;
+  makan_pagi_menu: string;
+  makan_pagi_catatan: string;
+  makan_siang_porsi: PortiMakan;
+  makan_siang_menu: string;
+  makan_siang_catatan: string;
+  snack_pagi: string;
+  snack_sore: string;
+  tidur_mulai: string;
+  tidur_selesai: string;
+  tidur_kualitas: "nyenyak" | "gelisah" | "tidak" | "";
+  toilet: ToiletStatus;
+  toilet_frekuensi: string;
+  mood: Mood;
+  mood_catatan: string;
+  aktivitas_belajar: string[];
+  bermain_catatan: string;
+  catatan_umum: string;
+  foto: { url: string; file: File }[];
+};
+
+type Anak = {
   id: number;
-  name: string;
+  nama: string;
   kelas: string;
-  avatar: string;
+  program: string;
   logDone: boolean;
-}
+};
 
-interface LogForm {
-  mandi: string;
-  makan: string;
-  bermain: string;
-  membaca: string;
-  Mewarnai: string;
-  nilaiStimulasi: number;
-}
-
-const initialChildren: Child[] = [
-  { id: 1, name: "Andra Pratama", kelas: "Rainbow Room",   avatar: "AP", logDone: false },
-  { id: 2, name: "Lana Safira",   kelas: "Sunshine Class", avatar: "LS", logDone: true  },
-  { id: 3, name: "Budi Wijaya",   kelas: "Rainbow Room",   avatar: "BW", logDone: false },
-  { id: 4, name: "Rina Putri",    kelas: "Star Class",     avatar: "RP", logDone: false },
-  { id: 5, name: "Dani Saputra",  kelas: "Sunshine Class", avatar: "DS", logDone: true  },
-  { id: 6, name: "Maya Sari",     kelas: "Rainbow Room",   avatar: "MS", logDone: false },
-  { id: 7, name: "Rafi Ahmad",    kelas: "Star Class",     avatar: "RA", logDone: false },
-  { id: 8, name: "Citra Dewi",    kelas: "Sunshine Class", avatar: "CD", logDone: false },
+const initialAnak: Anak[] = [
+  { id: 1, nama: "Almira Zahra",  kelas: "Rainbow Room", program: "Full Day",  logDone: false },
+  { id: 2, nama: "Bintang Putra", kelas: "Rainbow Room", program: "Half Day",  logDone: true  },
+  { id: 3, nama: "Citra Nadia",   kelas: "Sun Room",     program: "Full Day",  logDone: false },
+  { id: 4, nama: "Dafa Ramadhan", kelas: "Sun Room",     program: "Playgroup", logDone: false },
+  { id: 5, nama: "Elisa Putri",   kelas: "Moon Room",    program: "Full Day",  logDone: true  },
+  { id: 6, nama: "Farhan Akbar",  kelas: "Moon Room",    program: "Half Day",  logDone: false },
 ];
 
-const emptyForm: LogForm = { mandi: "", makan: "", bermain: "", membaca: "", Mewarnai: "", nilaiStimulasi: 0 };
+const emptyForm: LogForm = {
+  makan_pagi_porsi: "",
+  makan_pagi_menu: "",
+  makan_pagi_catatan: "",
+  makan_siang_porsi: "",
+  makan_siang_menu: "",
+  makan_siang_catatan: "",
+  snack_pagi: "",
+  snack_sore: "",
+  tidur_mulai: "",
+  tidur_selesai: "",
+  tidur_kualitas: "",
+  toilet: "tidak",
+  toilet_frekuensi: "",
+  mood: "",
+  mood_catatan: "",
+  aktivitas_belajar: [],
+  bermain_catatan: "",
+  catatan_umum: "",
+  foto: [],
+};
 
-function StarRating({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const [hovered, setHovered] = useState(0);
+const moodOptions: { value: Mood; label: string; color: string; bg: string }[] = [
+  { value: "senang",    label: "Senang",    color: "#5a7a00", bg: "bg-[#C4E02F]/15 border-[#C4E02F]/40"  },
+  { value: "biasa",     label: "Biasa",     color: "#1883FF", bg: "bg-[#1883FF]/10 border-[#1883FF]/30"  },
+  { value: "rewel",     label: "Rewel",     color: "#a0306a", bg: "bg-[#FFA9DD]/15 border-[#FFA9DD]/40"  },
+  { value: "mengantuk", label: "Mengantuk", color: "#a07000", bg: "bg-[#FEB700]/15 border-[#FEB700]/30"  },
+];
+
+const porsiOptions: { value: PortiMakan; label: string }[] = [
+  { value: "habis",    label: "Habis"    },
+  { value: "setengah", label: "Setengah" },
+  { value: "sedikit",  label: "Sedikit"  },
+  { value: "tidak",    label: "Tidak"    },
+];
+
+const tidurKualitasOptions = [
+  { value: "nyenyak", label: "Nyenyak" },
+  { value: "gelisah", label: "Gelisah" },
+  { value: "tidak",   label: "Tidak Tidur" },
+];
+
+const toiletOptions: { value: ToiletStatus; label: string }[] = [
+  { value: "mandiri",  label: "Mandiri"  },
+  { value: "dibantu",  label: "Dibantu"  },
+  { value: "belum",    label: "Belum"    },
+  { value: "tidak",    label: "Tidak"    },
+];
+
+const aktivitasPilihan = [
+  "Membaca buku", "Mewarnai", "Menggambar", "Puzzle",
+  "Menyanyi", "Menari", "Berhitung", "Bahasa Inggris",
+  "Seni & Kerajinan", "Cerita interaktif",
+];
+
+function SectionHeader({ icon, title, color }: { icon: React.ReactNode; title: string; color: string }) {
   return (
-    <div className="flex gap-1.5">
-      {[1,2,3,4,5].map((star) => (
+    <div className="flex items-center gap-3 mb-4">
+      <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: color + "20" }}>
+        <span style={{ color }}>{icon}</span>
+      </div>
+      <p className="text-[12px] font-bold text-[#1A1A1A] uppercase tracking-widest">{title}</p>
+    </div>
+  );
+}
+
+function PillSelect<T extends string>({
+  options, value, onChange,
+}: {
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((o) => (
         <button
-          key={star}
-          type="button"
-          onMouseEnter={() => setHovered(star)}
-          onMouseLeave={() => setHovered(0)}
-          onClick={() => onChange(star)}
-          className="transition-all duration-100 hover:scale-110"
+          key={o.value}
+          onClick={() => onChange(o.value)}
+          className={`px-3.5 py-2 rounded-xl text-[12px] font-bold border transition-all
+            ${value === o.value
+              ? "bg-[#1A1A1A] text-[#FFE26F] border-[#1A1A1A]"
+              : "bg-white text-[#4A4A4A] border-[#E8E4DB] hover:border-[#FFE26F]"}`}
         >
-          <Star
-            size={24}
-            className="transition-colors"
-            fill={(hovered || value) >= star ? "#FEB700" : "none"}
-            stroke={(hovered || value) >= star ? "#FEB700" : "#D0D0D0"}
-          />
+          {o.label}
         </button>
       ))}
     </div>
   );
 }
 
-function LogField({ label, value, onChange, placeholder }: {
-  label: string; value: string; onChange: (v: string) => void; placeholder: string;
+function Textarea({ value, onChange, placeholder, rows = 2 }: {
+  value: string; onChange: (v: string) => void; placeholder: string; rows?: number;
 }) {
   return (
-    <div>
-      <label className="block text-[11px] font-bold text-[#4A4A4A] uppercase tracking-wider mb-1.5">{label}</label>
-      <textarea
-        rows={2}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full text-[12px] border border-[#F0F0F0] rounded-xl px-4 py-3 bg-[#F4F6FA] focus:outline-none focus:ring-2 focus:ring-[#1883FF]/20 focus:border-[#1883FF]/30 placeholder:text-[#4A4A4A]/30 text-[#1A1A1A] resize-none transition-all"
-      />
-    </div>
+    <textarea
+      rows={rows}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full text-[13px] border border-[#E8E4DB] rounded-xl px-4 py-3 bg-white focus:outline-none focus:border-[#1883FF] placeholder:text-[#4A4A4A]/30 text-[#1A1A1A] resize-none transition-colors"
+      style={{ fontFamily: "'Montserrat', sans-serif" }}
+    />
   );
 }
 
-export default function PengasuhDailyLogPage() {
-  const [children, setChildren] = useState<Child[]>(initialChildren);
-  const [selected, setSelected] = useState<Child | null>(null);
-  const [form, setForm]         = useState<LogForm>(emptyForm);
-  const [saving, setSaving]     = useState(false);
-  const [saved, setSaved]       = useState(false);
-  const [search, setSearch]     = useState("");
+export default function DailyLogPage() {
+  const [anakList, setAnakList]   = useState<Anak[]>(initialAnak);
+  const [selected, setSelected]   = useState<Anak | null>(null);
+  const [form, setForm]           = useState<LogForm>(emptyForm);
+  const [saving, setSaving]       = useState(false);
+  const [saved, setSaved]         = useState(false);
+  const [search, setSearch]       = useState("");
+  const [activeSection, setActiveSection] = useState(0);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const logDone  = children.filter((c) => c.logDone).length;
-  const logBelum = children.filter((c) => !c.logDone).length;
-  const total    = children.length;
+  const done  = anakList.filter((a) => a.logDone).length;
+  const belum = anakList.filter((a) => !a.logDone).length;
 
-  const filtered = children.filter(
-    (c) => c.name.toLowerCase().includes(search.toLowerCase()) ||
-           c.kelas.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const handleSelect = (child: Child) => {
-    if (child.logDone) return;
-    setSelected(child);
-    setForm(emptyForm);
-    setSaved(false);
-  };
-
-  const handleBack = () => { setSelected(null); setSaved(false); };
-
-  const handleSave = () => {
-    if (!selected) return;
-    setSaving(true);
-    setTimeout(() => {
-      setChildren((prev) => prev.map((c) => c.id === selected.id ? { ...c, logDone: true } : c));
-      setSaving(false);
-      setSaved(true);
-      setTimeout(() => { setSelected(null); setSaved(false); }, 1500);
-    }, 800);
-  };
-
-  const updateForm = (key: keyof LogForm, val: string | number) =>
+  const set = <K extends keyof LogForm>(key: K, val: LogForm[K]) =>
     setForm((prev) => ({ ...prev, [key]: val }));
 
-  const isFormValid = form.mandi || form.makan || form.bermain || form.nilaiStimulasi > 0;
+  const handleFoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    const mapped = files.map((f) => ({ url: URL.createObjectURL(f), file: f }));
+    setForm((prev) => ({ ...prev, foto: [...prev.foto, ...mapped].slice(0, 6) }));
+  };
 
-  // ── FORM VIEW ──
+  const removeFoto = (i: number) =>
+    setForm((prev) => ({ ...prev, foto: prev.foto.filter((_, idx) => idx !== i) }));
+
+  const handleSelect = (anak: Anak) => {
+    if (anak.logDone) return;
+    setSelected(anak);
+    setForm(emptyForm);
+    setSaved(false);
+    setActiveSection(0);
+  };
+
+  const handleSave = async () => {
+    if (!selected) return;
+    setSaving(true);
+    await new Promise((r) => setTimeout(r, 1200));
+    setAnakList((prev) => prev.map((a) => a.id === selected.id ? { ...a, logDone: true } : a));
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => { setSelected(null); setSaved(false); }, 1800);
+  };
+
+  const toggleAktivitas = (item: string) => {
+    const current = form.aktivitas_belajar;
+    set("aktivitas_belajar", current.includes(item) ? current.filter((a) => a !== item) : [...current, item]);
+  };
+
+  const sections = ["Makan", "Tidur & Toilet", "Mood", "Aktivitas", "Foto & Catatan"];
+
+  const isValid =
+    form.mood !== "" ||
+    form.makan_pagi_porsi !== "" ||
+    form.makan_siang_porsi !== "" ||
+    form.tidur_kualitas !== "";
+
   if (selected) {
     return (
-      <div className="max-w-2xl mx-auto space-y-4">
-        {/* Back + child info */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleBack}
-            className="w-9 h-9 rounded-xl bg-white border border-[#F0F0F0] flex items-center justify-center text-[#4A4A4A] shadow-sm hover:shadow-md hover:scale-105 hover:text-[#1883FF] transition-all"
-          >
-            <ChevronLeft size={17} />
-          </button>
-          <div className="flex items-center gap-3 bg-white rounded-2xl border border-[#F0F0F0] shadow-sm px-4 py-2.5 flex-1">
-            <div className="w-9 h-9 rounded-full bg-[#1883FF]/10 flex items-center justify-center text-[10px] font-bold text-[#1883FF]">
-              {selected.avatar}
+      <div className="max-w-2xl mx-auto space-y-5">
+
+        {/* Header */}
+        <div className="bg-[#1A1A1A] rounded-2xl px-5 py-4">
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={() => setSelected(null)}
+              className="flex items-center gap-2 text-[#FFE26F] text-[13px] font-bold"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              Kembali
+            </button>
+            <span className="text-white/40 text-[11px] font-medium">
+              {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#1883FF]/20 border border-[#1883FF]/30 flex items-center justify-center text-[11px] font-black text-[#99ADFF] shrink-0">
+              {selected.nama.split(" ").map((n) => n[0]).join("").slice(0, 2)}
             </div>
             <div>
-              <p className="text-[13px] font-bold text-[#1A1A1A]">Input Daily Log</p>
-              <p className="text-[10px] text-[#4A4A4A]">{selected.name} · {selected.kelas}</p>
+              <p className="text-white font-bold text-[15px] leading-tight">{selected.nama}</p>
+              <p className="text-white/40 text-[11px]">{selected.kelas} · {selected.program}</p>
             </div>
-            <div className="ml-auto flex items-center gap-1 text-[10px] text-[#4A4A4A]">
-              <Clock size={11} />
-              {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+            <div className="ml-auto flex items-center gap-1.5 bg-[#FFA9DD]/15 border border-[#FFA9DD]/20 rounded-full px-3 py-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FFA9DD] animate-pulse" />
+              <span className="text-[10px] font-bold text-[#FFA9DD]">Live ke orang tua</span>
             </div>
           </div>
         </div>
 
-        {/* Form */}
-        <div className="bg-white rounded-2xl shadow-sm border border-[#F0F0F0] p-6 space-y-5">
+        {/* Section tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-0.5">
+          {sections.map((s, i) => (
+            <button
+              key={s}
+              onClick={() => setActiveSection(i)}
+              className={`shrink-0 px-4 py-2 rounded-xl text-[12px] font-bold border transition-all
+                ${activeSection === i
+                  ? "bg-[#1A1A1A] text-[#FFE26F] border-[#1A1A1A]"
+                  : "bg-white text-[#4A4A4A] border-[#E8E4DB] hover:border-[#FFE26F]"}`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
 
-          {/* Rutinitas */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-6 h-6 rounded-lg bg-[#1883FF]/10 flex items-center justify-center">
-                <BookOpen size={13} className="text-[#1883FF]" />
-              </div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#4A4A4A]">Rutinitas Harian</p>
-            </div>
-            <div className="space-y-3">
-              <LogField label="Mandi"   value={form.mandi}   onChange={(v) => updateForm("mandi", v)}   placeholder="Catatan tentang mandi..." />
-              <LogField label="Makan"   value={form.makan}   onChange={(v) => updateForm("makan", v)}   placeholder="Catatan tentang makan..." />
-              <LogField label="Bermain" value={form.bermain} onChange={(v) => updateForm("bermain", v)} placeholder="Catatan tentang bermain..." />
-            </div>
-          </div>
+        {/* Section content */}
+        <div className="bg-white rounded-2xl border border-[#FFE26F]/30 shadow-sm p-6 space-y-6">
 
-          <div className="border-t border-[#F0F0F0]" />
+          {/* MAKAN */}
+          {activeSection === 0 && (
+            <div className="space-y-6">
+              <SectionHeader
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                }
+                title="Makan & Minum"
+                color="#FEB700"
+              />
 
-          {/* Kegiatan Khusus */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-6 h-6 rounded-lg bg-[#FFE26F]/30 flex items-center justify-center">
-                <Star size={13} className="text-[#FEB700]" />
-              </div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#4A4A4A]">Kegiatan Khusus</p>
-            </div>
-            <div className="space-y-3">
-              <LogField label="membaca"        value={form.membaca} onChange={(v) => updateForm("membaca", v)} placeholder="Catatan tentang membaca..." />
-              <LogField label="Mewarnai" value={form.Mewarnai}  onChange={(v) => updateForm("Mewarnai", v)}  placeholder="Catatan tentang Mewarnai..." />
-            </div>
-          </div>
-
-          <div className="border-t border-[#F0F0F0]" />
-
-          {/* Nilai Stimulasi */}
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[#4A4A4A] mb-3">Nilai Stimulasi</p>
-            <StarRating value={form.nilaiStimulasi} onChange={(v) => updateForm("nilaiStimulasi", v)} />
-            {form.nilaiStimulasi > 0 && (
-              <p className="text-[11px] text-[#FEB700] font-semibold mt-1">
-                {["","Perlu Perhatian","Cukup Baik","Baik","Sangat Baik","Luar Biasa!"][form.nilaiStimulasi]}
-              </p>
-            )}
-          </div>
-
-          <div className="border-t border-[#F0F0F0]" />
-
-          {/* Upload Foto */}
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[#4A4A4A] mb-3">Upload Foto</p>
-            <div className="flex gap-3">
-              <label className="w-24 h-20 rounded-xl border-2 border-dashed border-[#F0F0F0] flex flex-col items-center justify-center cursor-pointer hover:border-[#1883FF] hover:bg-[#1883FF]/5 transition-all group">
-                <Upload size={16} className="text-[#4A4A4A]/40 group-hover:text-[#1883FF] transition-colors" />
-                <span className="text-[9px] text-[#4A4A4A]/40 mt-1 group-hover:text-[#1883FF]">Tambah</span>
-                <input type="file" accept="image/*" className="hidden" />
-              </label>
-              {[1,2].map((i) => (
-                <div key={i} className="w-24 h-20 rounded-xl bg-[#F4F6FA] border border-[#F0F0F0]" />
+              {[
+                { label: "Makan Pagi", porsiKey: "makan_pagi_porsi" as const, menuKey: "makan_pagi_menu" as const, catatanKey: "makan_pagi_catatan" as const },
+                { label: "Makan Siang", porsiKey: "makan_siang_porsi" as const, menuKey: "makan_siang_menu" as const, catatanKey: "makan_siang_catatan" as const },
+              ].map((meal) => (
+                <div key={meal.label} className="space-y-3 p-4 bg-[#FFFDF7] rounded-2xl border border-[#FFE26F]/20">
+                  <p className="text-[12px] font-bold text-[#1A1A1A]">{meal.label}</p>
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#4A4A4A] mb-2">Porsi</p>
+                    <PillSelect options={porsiOptions} value={form[meal.porsiKey]} onChange={(v) => set(meal.porsiKey, v)} />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#4A4A4A] mb-2">Menu</p>
+                    <input
+                      value={form[meal.menuKey]}
+                      onChange={(e) => set(meal.menuKey, e.target.value)}
+                      placeholder="Contoh: Nasi, ayam, sayur bayam..."
+                      className="w-full text-[13px] border border-[#E8E4DB] rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:border-[#1883FF] transition-colors"
+                      style={{ fontFamily: "'Montserrat', sans-serif" }}
+                    />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#4A4A4A] mb-2">Catatan</p>
+                    <Textarea value={form[meal.catatanKey]} onChange={(v) => set(meal.catatanKey, v)} placeholder="Catatan tambahan tentang makan..." />
+                  </div>
+                </div>
               ))}
-            </div>
-          </div>
 
-          {/* Save */}
-          <button
-            onClick={handleSave}
-            disabled={saving || saved || !isFormValid}
-            className={`w-full py-3.5 rounded-xl text-[13px] font-bold transition-all duration-200
-              ${saved
-                ? "bg-[#C4E02F] text-[#1A1A1A]"
-                : !isFormValid
-                  ? "bg-[#F4F6FA] text-[#4A4A4A] cursor-not-allowed"
-                  : saving
-                    ? "bg-[#1883FF]/60 text-white cursor-wait"
-                    : "bg-[#1883FF] text-white hover:bg-[#1570e0] hover:shadow-lg hover:shadow-[#1883FF]/20 hover:scale-[1.01] active:scale-[0.99] shadow-md shadow-[#1883FF]/15"}`}
-          >
-            {saved ? "✓ Daily Log Tersimpan!" : saving ? "Menyimpan..." : "Simpan Daily Log"}
-          </button>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { label: "Snack Pagi", key: "snack_pagi" as const },
+                  { label: "Snack Sore", key: "snack_sore" as const },
+                ].map((s) => (
+                  <div key={s.label} className="space-y-2">
+                    <p className="text-[12px] font-bold text-[#1A1A1A]">{s.label}</p>
+                    <input
+                      value={form[s.key]}
+                      onChange={(e) => set(s.key, e.target.value)}
+                      placeholder="Nama snack..."
+                      className="w-full text-[13px] border border-[#E8E4DB] rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:border-[#1883FF] transition-colors"
+                      style={{ fontFamily: "'Montserrat', sans-serif" }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TIDUR & TOILET */}
+          {activeSection === 1 && (
+            <div className="space-y-6">
+              <SectionHeader
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                }
+                title="Tidur Siang"
+                color="#99ADFF"
+              />
+              <div className="space-y-4 p-4 bg-[#FFFDF7] rounded-2xl border border-[#FFE26F]/20">
+                <div className="grid grid-cols-2 gap-4">
+                  {[
+                    { label: "Mulai Tidur", key: "tidur_mulai" as const },
+                    { label: "Bangun Tidur", key: "tidur_selesai" as const },
+                  ].map((t) => (
+                    <div key={t.label} className="space-y-2">
+                      <p className="text-[11px] font-semibold text-[#4A4A4A]">{t.label}</p>
+                      <input
+                        type="time"
+                        value={form[t.key]}
+                        onChange={(e) => set(t.key, e.target.value)}
+                        className="w-full text-[13px] border border-[#E8E4DB] rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:border-[#1883FF] transition-colors"
+                        style={{ fontFamily: "'Montserrat', sans-serif" }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold text-[#4A4A4A] mb-2">Kualitas Tidur</p>
+                  <PillSelect
+                    options={tidurKualitasOptions as { value: "nyenyak" | "gelisah" | "tidak"; label: string }[]}
+                    value={form.tidur_kualitas}
+                    onChange={(v) => set("tidur_kualitas", v)}
+                  />
+                </div>
+              </div>
+
+              <SectionHeader
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                }
+                title="Toilet Training"
+                color="#1883FF"
+              />
+              <div className="space-y-4 p-4 bg-[#FFFDF7] rounded-2xl border border-[#FFE26F]/20">
+                <div>
+                  <p className="text-[11px] font-semibold text-[#4A4A4A] mb-2">Status</p>
+                  <PillSelect options={toiletOptions} value={form.toilet} onChange={(v) => set("toilet", v)} />
+                </div>
+                {form.toilet !== "tidak" && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#4A4A4A] mb-2">Frekuensi / Catatan</p>
+                    <input
+                      value={form.toilet_frekuensi}
+                      onChange={(e) => set("toilet_frekuensi", e.target.value)}
+                      placeholder="Contoh: 2x ke toilet, berhasil mandiri..."
+                      className="w-full text-[13px] border border-[#E8E4DB] rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:border-[#1883FF] transition-colors"
+                      style={{ fontFamily: "'Montserrat', sans-serif" }}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* MOOD */}
+          {activeSection === 2 && (
+            <div className="space-y-4">
+              <SectionHeader
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                }
+                title="Mood & Kondisi"
+                color="#FFA9DD"
+              />
+              <div className="grid grid-cols-2 gap-3">
+                {moodOptions.map((m) => (
+                  <button
+                    key={m.value}
+                    onClick={() => set("mood", m.value)}
+                    className={`p-4 rounded-2xl border-2 text-left transition-all
+                      ${form.mood === m.value
+                        ? `${m.bg} border-current`
+                        : "bg-white border-[#E8E4DB] hover:border-[#FFE26F]"}`}
+                    style={form.mood === m.value ? { color: m.color } : {}}
+                  >
+                    <p className="text-[14px] font-black">{m.label}</p>
+                  </button>
+                ))}
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold text-[#4A4A4A] mb-2">Catatan Kondisi</p>
+                <Textarea
+                  value={form.mood_catatan}
+                  onChange={(v) => set("mood_catatan", v)}
+                  placeholder="Contoh: Anak terlihat ceria sepanjang hari, sempat menangis saat makan siang..."
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* AKTIVITAS */}
+          {activeSection === 3 && (
+            <div className="space-y-5">
+              <SectionHeader
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                }
+                title="Aktivitas Belajar"
+                color="#C4E02F"
+              />
+              <div className="flex flex-wrap gap-2">
+                {aktivitasPilihan.map((item) => {
+                  const active = form.aktivitas_belajar.includes(item);
+                  return (
+                    <button
+                      key={item}
+                      onClick={() => toggleAktivitas(item)}
+                      className={`px-3.5 py-2 rounded-xl text-[12px] font-bold border transition-all
+                        ${active
+                          ? "bg-[#C4E02F]/20 text-[#5a7a00] border-[#C4E02F]/50"
+                          : "bg-white text-[#4A4A4A] border-[#E8E4DB] hover:border-[#C4E02F]/40"}`}
+                    >
+                      {active && <span className="mr-1">✓</span>}{item}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div>
+                <p className="text-[11px] font-semibold text-[#4A4A4A] mb-2">Catatan Bermain Bebas</p>
+                <Textarea
+                  value={form.bermain_catatan}
+                  onChange={(v) => set("bermain_catatan", v)}
+                  placeholder="Contoh: Bermain balok bersama teman, menyusun puzzle 12 keping secara mandiri..."
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* FOTO & CATATAN */}
+          {activeSection === 4 && (
+            <div className="space-y-5">
+              <SectionHeader
+                icon={
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                }
+                title="Foto Kegiatan"
+                color="#1883FF"
+              />
+              <div className="grid grid-cols-3 gap-3">
+                {form.foto.map((f, i) => (
+                  <div key={i} className="relative aspect-square rounded-2xl overflow-hidden border border-[#E8E4DB]">
+                    <img src={f.url} alt="" className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => removeFoto(i)}
+                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center text-white text-[10px] hover:bg-black/80 transition-colors"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {form.foto.length < 6 && (
+                  <button
+                    onClick={() => fileRef.current?.click()}
+                    className="aspect-square rounded-2xl border-2 border-dashed border-[#FFE26F] bg-[#FFF8E8] hover:border-[#1883FF] hover:bg-[#EBF4FF] transition-all flex flex-col items-center justify-center gap-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-[#4A4A4A]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span className="text-[10px] text-[#4A4A4A]/40 font-semibold">Tambah</span>
+                  </button>
+                )}
+              </div>
+              <input ref={fileRef} type="file" accept="image/*" multiple capture="environment" onChange={handleFoto} className="hidden" />
+              <p className="text-[11px] text-[#4A4A4A] font-medium">Maks 6 foto · Akan dikirim langsung ke orang tua</p>
+
+              <div>
+                <p className="text-[12px] font-bold text-[#1A1A1A] mb-2">Catatan Umum untuk Orang Tua</p>
+                <Textarea
+                  value={form.catatan_umum}
+                  onChange={(v) => set("catatan_umum", v)}
+                  placeholder="Pesan atau catatan khusus untuk orang tua hari ini..."
+                  rows={4}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom nav */}
+        <div className="flex gap-3 pb-4">
+          {activeSection > 0 && (
+            <button
+              onClick={() => setActiveSection(activeSection - 1)}
+              className="px-5 py-3.5 rounded-2xl border border-[#E8E4DB] text-[13px] font-bold text-[#4A4A4A] hover:bg-[#FFFDF7] transition-all"
+            >
+              ←
+            </button>
+          )}
+          {activeSection < sections.length - 1 ? (
+            <button
+              onClick={() => setActiveSection(activeSection + 1)}
+              className="flex-1 py-3.5 rounded-2xl bg-[#1A1A1A] text-[#FFE26F] text-[14px] font-bold hover:opacity-90 active:scale-95 transition-all"
+            >
+              Lanjut ke {sections[activeSection + 1]} →
+            </button>
+          ) : (
+            <button
+              onClick={handleSave}
+              disabled={saving || saved || !isValid}
+              className={`flex-1 py-3.5 rounded-2xl text-[14px] font-bold transition-all
+                ${saved
+                  ? "bg-[#C4E02F] text-[#1A1A1A]"
+                  : !isValid
+                    ? "bg-[#E8E4DB] text-[#999] cursor-not-allowed"
+                    : saving
+                      ? "bg-[#1883FF]/60 text-white"
+                      : "bg-[#1A1A1A] text-[#FFE26F] hover:opacity-90 active:scale-95"}`}
+            >
+              {saved ? "Tersimpan & Dikirim ke Orang Tua" : saving ? "Menyimpan..." : "Simpan & Kirim ke Orang Tua"}
+            </button>
+          )}
         </div>
       </div>
     );
   }
 
-  // ── LIST VIEW ──
+  // LIST VIEW
   return (
-    <div className="space-y-5">
-      {/* Stat cards */}
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-[#1A1A1A] tracking-tight">Daily Log</h1>
+        <p className="text-[13px] text-[#4A4A4A] mt-1">Isi laporan harian anak — langsung diterima orang tua.</p>
+      </div>
+
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Total Anak",  value: total,    bg: "#1883FF", sub: "Hari ini"    },
-          { label: "Log Selesai", value: logDone,  bg: "#C4E02F", sub: "Sudah diisi" },
-          { label: "Belum Diisi", value: logBelum, bg: "#FFE26F", sub: "Perlu diisi" },
+          { label: "Total Anak",  value: anakList.length, bg: "bg-[#1883FF]/10", border: "border-[#1883FF]/20", text: "text-[#1883FF]"  },
+          { label: "Selesai",     value: done,             bg: "bg-[#C4E02F]/10", border: "border-[#C4E02F]/20", text: "text-[#5a7a00]"  },
+          { label: "Belum Diisi", value: belum,            bg: "bg-[#FEB700]/10", border: "border-[#FEB700]/20", text: "text-[#a07000]"  },
         ].map((s) => (
-          <div key={s.label}
-            className="bg-white rounded-2xl p-4 shadow-sm border border-[#F0F0F0] hover:shadow-md hover:scale-[1.02] transition-all cursor-default">
-            <div className="w-8 h-8 rounded-xl mb-3 flex items-center justify-center" style={{ background: `${s.bg}20` }}>
-              <BookOpen size={15} style={{ color: s.bg }} />
-            </div>
-            <p className="text-2xl font-bold text-[#1A1A1A] leading-none mb-1">{s.value}</p>
-            <p className="text-[11px] font-semibold text-[#1A1A1A]">{s.label}</p>
-            <p className="text-[10px] text-[#4A4A4A]">{s.sub}</p>
+          <div key={s.label} className={`${s.bg} border ${s.border} rounded-2xl p-4 md:p-5`}>
+            <p className={`text-3xl font-black ${s.text}`}>{s.value}</p>
+            <p className="text-[11px] font-semibold text-[#4A4A4A] mt-1">{s.label}</p>
           </div>
         ))}
       </div>
 
-      {/* Progress */}
-      <div className="bg-white rounded-2xl shadow-sm border border-[#F0F0F0] p-5">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-[13px] font-semibold text-[#1A1A1A]">Progress Pengisian Daily Log</p>
-          <span className="text-[12px] font-bold text-[#1883FF]">{logDone}/{total}</span>
+      <div className="bg-white rounded-2xl border border-[#FFE26F]/30 shadow-sm p-5">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[12px] font-bold text-[#1A1A1A] uppercase tracking-wider">Progress</p>
+          <span className="text-[12px] font-bold text-[#1883FF]">{done}/{anakList.length}</span>
         </div>
-        <div className="w-full h-2.5 bg-[#F4F6FA] rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-500 shadow-sm"
-            style={{ width: `${(logDone/total)*100}%`, background: "#1883FF" }}
-          />
+        <div className="w-full h-2.5 bg-[#F0EDE6] rounded-full overflow-hidden">
+          <div className="h-full bg-[#C4E02F] rounded-full transition-all duration-500" style={{ width: `${(done / anakList.length) * 100}%` }} />
         </div>
-        <p className="text-[10px] text-[#4A4A4A] mt-2">{logBelum} log belum diisi</p>
       </div>
 
-      {/* List */}
-      <div className="bg-white rounded-2xl shadow-sm border border-[#F0F0F0] overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#F0F0F0]">
-          <p className="text-[13px] font-bold text-[#1A1A1A]">Pilih Anak</p>
-          <div className="relative">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4A4A4A]/40" />
-            <input
-              type="text"
-              placeholder="Cari nama anak..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 pr-4 py-1.5 text-[11px] border border-[#F0F0F0] rounded-xl bg-[#F4F6FA] focus:outline-none focus:ring-2 focus:ring-[#1883FF]/20 w-44 placeholder:text-[#4A4A4A]/40"
-            />
-          </div>
-        </div>
+      <div className="relative">
+        <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4A4A4A]/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Cari nama anak..."
+          className="w-full pl-10 pr-4 py-2.5 text-[13px] border border-[#E8E4DB] rounded-xl bg-white focus:outline-none focus:border-[#1883FF] transition-colors font-medium"
+          style={{ fontFamily: "'Montserrat', sans-serif" }}
+        />
+      </div>
 
-        <div className="divide-y divide-[#F0F0F0]">
-          {filtered.map((child) => (
-            <button
-              key={child.id}
-              onClick={() => handleSelect(child)}
-              disabled={child.logDone}
-              className={`w-full flex items-center gap-4 px-5 py-3.5 text-left transition-all
-                ${child.logDone
-                  ? "bg-[#F4F6FA] opacity-60 cursor-not-allowed"
-                  : "hover:bg-[#F4F6FA] hover:scale-[1.005] cursor-pointer"}`}
-            >
-              <div className="w-10 h-10 rounded-full bg-[#1883FF]/10 border-2 border-[#1883FF]/20 flex items-center justify-center text-[10px] font-bold text-[#1883FF] flex-shrink-0">
-                {child.avatar}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-semibold text-[#1A1A1A] truncate">{child.name}</p>
-                <p className="text-[10px] text-[#4A4A4A] truncate">{child.kelas}</p>
-              </div>
-              {child.logDone ? (
-                <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#5a8a00] bg-[#C4E02F]/20 px-3 py-1.5 rounded-full flex-shrink-0">
-                  <CheckCircle2 size={12} /> Selesai
-                </span>
-              ) : (
-                <span className="text-[11px] font-semibold text-[#1883FF] bg-[#1883FF]/10 px-3 py-1.5 rounded-full flex-shrink-0 hover:bg-[#1883FF] hover:text-white transition-colors">
-                  Isi Log →
-                </span>
-              )}
-            </button>
-          ))}
+      <div className="bg-white rounded-2xl border border-[#FFE26F]/30 shadow-sm overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-[#F0EDE6]">
+          <p className="text-[12px] font-bold text-[#1A1A1A] uppercase tracking-widest">Pilih Anak</p>
+        </div>
+        <div className="divide-y divide-[#F7F5F0]">
+          {anakList
+            .filter((a) => a.nama.toLowerCase().includes(search.toLowerCase()))
+            .map((anak) => (
+              <button
+                key={anak.id}
+                onClick={() => handleSelect(anak)}
+                disabled={anak.logDone}
+                className={`w-full flex items-center gap-4 px-5 py-4 text-left transition-all
+                  ${anak.logDone
+                    ? "opacity-50 cursor-not-allowed bg-[#F7F5F0]"
+                    : "hover:bg-[#FFFDF7] cursor-pointer"}`}
+              >
+                <div className="w-10 h-10 rounded-xl bg-[#1883FF]/10 border border-[#1883FF]/20 flex items-center justify-center text-[11px] font-black text-[#1883FF] shrink-0">
+                  {anak.nama.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-bold text-[#1A1A1A] truncate">{anak.nama}</p>
+                  <p className="text-[11px] text-[#4A4A4A]">{anak.kelas} · {anak.program}</p>
+                </div>
+                {anak.logDone ? (
+                  <span className="shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-bold bg-[#C4E02F]/15 text-[#5a7a00] border border-[#C4E02F]/30">
+                    Selesai
+                  </span>
+                ) : (
+                  <span className="shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-bold bg-[#1883FF]/10 text-[#1883FF] border border-[#1883FF]/20">
+                    Isi Log →
+                  </span>
+                )}
+              </button>
+            ))}
         </div>
       </div>
     </div>
