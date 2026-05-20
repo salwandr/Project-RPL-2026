@@ -205,7 +205,7 @@ export default function DailyLogPage() {
     form.mood !== "" ||
     form.makan_pagi_porsi !== "" ||
     form.makan_siang_porsi !== "" ||
-    form.tidur_kualitas !== "";
+    form.tidur_kualitas !== "" ||;
 
   if (selected) {
     return (
