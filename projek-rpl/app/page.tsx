@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { Star, Sun, Home, Target, CheckCircle2 } from 'lucide-react';
+import { Star, Sun, Home, CheckCircle2 } from 'lucide-react';
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
@@ -40,7 +40,7 @@ export default function LandingPage() {
           </div>
 
           <Link href="/login">
-            <button className="bg-[#1883FF] text-[#1A1A1A] px-7 py-2.5 rounded-full font-bold shadow-md shadow-[#1883FF]/30 hover:bg-[#1570e0] hover:scale-105 active:scale-95 transition-all">
+            <button className="bg-[#1883FF] text-white px-7 py-2.5 rounded-full font-bold shadow-md shadow-[#1883FF]/30 hover:bg-[#1570e0] hover:scale-105 active:scale-95 transition-all">
               Masuk / Daftar
             </button>
           </Link>
@@ -74,23 +74,33 @@ export default function LandingPage() {
               Di Tanika Daycare, setiap anak mendapatkan perhatian penuh, lingkungan aman, dan stimulasi tumbuh kembang yang terstruktur.
             </p>
 
+            {/* ── TOMBOL HERO ── */}
             <div className="flex flex-wrap gap-4">
               <Link href="/login">
-              <button className="bg-[#1883FF] text-[#1A1A1A] px-9 py-4 rounded-full font-bold shadow-lg shadow-[#1883FF]/25 hover:bg-[#1570e0] hover:scale-105 active:scale-95 transition-all">
-                Daftarkan Sekarang
-              </button>
-            </Link>
-              <button className="border-2 border-[#FFE26F] text-[#1A1A1A] px-9 py-4 rounded-full font-bold hover:bg-[#FFE26F] transition-all">
+                <button className="bg-[#1883FF] text-white px-9 py-4 rounded-full font-bold shadow-lg shadow-[#1883FF]/25 hover:bg-[#1570e0] hover:scale-105 active:scale-95 transition-all">
+                  Daftarkan Sekarang
+                </button>
+              </Link>
+
+              {/* ← INI YANG DIPERBAIKI */}
+              <a
+                href="#programs"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById("programs")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="border-2 border-[#FFE26F] text-[#1A1A1A] px-9 py-4 rounded-full font-bold hover:bg-[#FFE26F] transition-all inline-block cursor-pointer"
+              >
                 Lihat Program
-              </button>
+              </a>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { value: "15+", label: "Tahun Pengalaman", bg: "bg-[#FFE26F]/40" },
-                { value: "200+", label: "Alumni Bahagia",  bg: "bg-[#1883FF]/20" },
-                { value: "98%", label: "Kepuasan Ortu",   bg: "bg-[#FFA9DD]/20" },
+                { value: "15+",  label: "Tahun Pengalaman", bg: "bg-[#FFE26F]/40" },
+                { value: "200+", label: "Alumni Bahagia",   bg: "bg-[#1883FF]/20" },
+                { value: "98%",  label: "Kepuasan Ortu",    bg: "bg-[#FFA9DD]/20" },
               ].map((s) => (
                 <div key={s.label} className={`${s.bg} rounded-2xl px-4 py-3 text-center border border-white`}>
                   <div className="text-2xl font-bold text-[#1A1A1A]">{s.value}</div>
@@ -105,7 +115,6 @@ export default function LandingPage() {
             <div className="absolute w-[105%] aspect-square rounded-full border-2 border-dashed border-[#FFE26F]/50 animate-[spin_30s_linear_infinite]" />
             <div className="relative w-[88%] aspect-square">
               <div className="absolute inset-0 bg-gradient-to-br from-[#FFE26F]/40 to-[#1883FF]/30 rounded-[3.5rem] rotate-3" />
-              {/* Ganti src="/hero.jpg" dengan nama file foto kamu */}
               <div className="relative w-full h-full rounded-[3rem] overflow-hidden border-[10px] border-white shadow-2xl">
                 <Image
                   src="/hero.jpg"
@@ -147,14 +156,10 @@ export default function LandingPage() {
           {/* Foto grid */}
           <div className="relative">
             <div className="grid grid-cols-2 gap-4">
-              
-
               <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden shadow-lg border-4 border-white">
                 <Image src="/landingpage.jpg" alt="About 1" fill className="object-cover" />
               </div>
               <div className="flex flex-col gap-4 mt-8">
-               
-
                 <div className="relative flex-1 rounded-[2rem] overflow-hidden shadow-lg border-4 border-white">
                   <Image src="/about.jpg" alt="About 2" fill className="object-cover" />
                 </div>
@@ -171,7 +176,7 @@ export default function LandingPage() {
               </div>
               <div>
                 <p className="text-[11px] text-white/50 uppercase tracking-wider">Berdiri sejak</p>
-                <p className="text-[15px] font-bold">2020 —  Sekarang</p>
+                <p className="text-[15px] font-bold">2020 — Sekarang</p>
               </div>
             </div>
           </div>
@@ -219,19 +224,18 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-           <ProgramCard
-            icon={<Sun className="w-6 h-6" />}
-            title="Program Harian"
-            desc="Penitipan fleksibel harian dengan aktivitas bermain, belajar, makan, dan istirahat yang terjadwal."
-            accent="#FEB700"
-          />
-
-          <ProgramCard
-            icon={<Home className="w-6 h-6" />}
-            title="Program Bulanan"
-            desc="Program penitipan rutin bulanan dengan pemantauan tumbuh kembang dan laporan harian digital."
-            accent="#1883FF"
-          />
+            <ProgramCard
+              icon={<Sun className="w-6 h-6" />}
+              title="Program Harian"
+              desc="Penitipan fleksibel harian dengan aktivitas bermain, belajar, makan, dan istirahat yang terjadwal."
+              accent="#FEB700"
+            />
+            <ProgramCard
+              icon={<Home className="w-6 h-6" />}
+              title="Program Bulanan"
+              desc="Program penitipan rutin bulanan dengan pemantauan tumbuh kembang dan laporan harian digital."
+              accent="#1883FF"
+            />
           </div>
         </div>
       </section>
@@ -249,14 +253,18 @@ export default function LandingPage() {
             Daftarkan anak Anda sekarang dan rasakan pengalaman daycare terbaik yang transparan dan penuh kasih sayang.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
-           <Link href="/login">
-            <button className="bg-[#1883FF] text-[#1A1A1A] px-9 py-4 rounded-full font-bold shadow-lg shadow-[#1883FF]/25 hover:bg-[#1570e0] hover:scale-105 active:scale-95 transition-all">
-              DaftarSekarang
-            </button>
-          </Link>
+            <Link href="/login">
+              <button className="bg-[#1883FF] text-white px-9 py-4 rounded-full font-bold shadow-lg shadow-[#1883FF]/25 hover:bg-[#1570e0] hover:scale-105 active:scale-95 transition-all">
+                Daftar Sekarang
+              </button>
+            </Link>
             <a
               href="#contact"
-              className="border-2 border-white/20 text-white/70 px-10 py-4 rounded-full font-bold hover:border-white/50 hover:text-white transition-all inline-block"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="border-2 border-white/20 text-white/70 px-10 py-4 rounded-full font-bold hover:border-white/50 hover:text-white transition-all inline-block cursor-pointer"
             >
               Hubungi Kami
             </a>
@@ -294,25 +302,23 @@ export default function LandingPage() {
             </div>
           </div>
 
-         {/* Map */}
-{/* Map */}
-<div className="mb-12">
-  <p className="text-center font-bold text-[#1A1A1A] text-sm uppercase tracking-widest mb-5">
-    Lokasi Kami
-  </p>
-
-  <div className="w-full h-64 rounded-[2.5rem] overflow-hidden border border-[#FFE26F] shadow-sm">
-    <iframe
-      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3963.610113070772!2d106.7426419!3d-6.570792399999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69c4c11ee8c5d7%3A0xbec48874ac449d9e!2sTanika%20Daycare!5e0!3m2!1sid!2sid!4v1778602448304!5m2!1sid!2sid"
-      width="100%"
-      height="100%"
-      style={{ border: 0 }}
-      allowFullScreen
-      loading="lazy"
-      referrerPolicy="no-referrer-when-downgrade"
-    />
-  </div>
-</div>
+          {/* Map */}
+          <div className="mb-12">
+            <p className="text-center font-bold text-[#1A1A1A] text-sm uppercase tracking-widest mb-5">
+              Lokasi Kami
+            </p>
+            <div className="w-full h-64 rounded-[2.5rem] overflow-hidden border border-[#FFE26F] shadow-sm">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3963.610113070772!2d106.7426419!3d-6.570792399999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69c4c11ee8c5d7%3A0xbec48874ac449d9e!2sTanika%20Daycare!5e0!3m2!1sid!2sid!4v1778602448304!5m2!1sid!2sid"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+          </div>
 
           <div className="text-center text-[#4A4A4A] text-sm font-light pt-8 border-t border-[#FFE26F]/30">
             © 2026 Tanika Daycare. All rights reserved. Made with love for little learners.

@@ -2,127 +2,203 @@
 
 import { useState } from "react";
 
-const DATES = [
-  "2026-05-13",
-  "2026-05-12",
-  "2026-05-11",
-  "2026-05-08",
-  "2026-05-07",
-];
+const DATES = ["2026-05-13", "2026-05-12", "2026-05-11", "2026-05-08", "2026-05-07"];
 
-const LOGS: Record<string, {
-  mandi: boolean;
-  makan: { pagi: boolean; siang: boolean; sore: boolean };
-  bermain: string;
-  membaca: boolean;
-  Mewarnai: boolean;
-  bintang: number;
-  catatan: string;
-  foto?: string;
-}> = {
+type Mood = "senang" | "biasa" | "rewel" | "mengantuk";
+type PortiMakan = "habis" | "setengah" | "sedikit" | "tidak";
+type ToiletStatus = "mandiri" | "dibantu" | "belum" | "tidak";
+type TidurKualitas = "nyenyak" | "gelisah" | "tidak";
+
+interface DailyLogData {
+  // Makan
+  makan_pagi_porsi: PortiMakan;
+  makan_pagi_menu: string;
+  makan_pagi_catatan: string;
+  makan_siang_porsi: PortiMakan;
+  makan_siang_menu: string;
+  makan_siang_catatan: string;
+  snack_pagi: string;
+  snack_sore: string;
+  // Tidur
+  tidur_mulai: string;
+  tidur_selesai: string;
+  tidur_kualitas: TidurKualitas;
+  // Toilet
+  toilet: ToiletStatus;
+  toilet_frekuensi: string;
+  // Mood
+  mood: Mood;
+  mood_catatan: string;
+  // Aktivitas
+  aktivitas_belajar: string[];
+  bermain_catatan: string;
+  // Catatan & foto
+  catatan_umum: string;
+  foto: string[];
+}
+
+const LOGS: Record<string, DailyLogData> = {
   "2026-05-13": {
-    mandi: true,
-    makan: { pagi: true, siang: true, sore: false },
-    bermain: "Lego, mewarnai, bermain pasir",
-    membaca: true,
-    Mewarnai: true,
-    bintang: 5,
-    catatan: "Hari ini Zahra sangat aktif dan ceria. Makan siang dengan lahap dan mau berbagi mainan dengan teman-temannya. Hebat!",
+    makan_pagi_porsi: "habis", makan_pagi_menu: "Nasi, telur dadar, sayur bayam", makan_pagi_catatan: "Makan dengan lahap dan mandiri",
+    makan_siang_porsi: "habis", makan_siang_menu: "Nasi, ayam suwir, sup wortel", makan_siang_catatan: "Minta tambah nasinya",
+    snack_pagi: "Biskuit susu", snack_sore: "Buah potong",
+    tidur_mulai: "12:30", tidur_selesai: "14:00", tidur_kualitas: "nyenyak",
+    toilet: "mandiri", toilet_frekuensi: "2x ke toilet, berhasil mandiri",
+    mood: "senang", mood_catatan: "Ceria sepanjang hari, aktif mengajak teman bermain",
+    aktivitas_belajar: ["Mewarnai", "Membaca buku", "Menyanyi"],
+    bermain_catatan: "Bermain lego dan pasir bersama teman-teman, sangat kooperatif",
+    catatan_umum: "Hari ini Zahra sangat aktif dan ceria. Mau berbagi mainan dengan teman-temannya. Hebat!",
+    foto: [],
   },
   "2026-05-12": {
-    mandi: true,
-    makan: { pagi: true, siang: false, sore: true },
-    bermain: "Puzzle, menggambar",
-    membaca: false,
-    Mewarnai: true,
-    bintang: 4,
-    catatan: "Zahra sedikit rewel saat makan siang, namun mood membaik setelah istirahat. Aktif bermain puzzle bersama teman.",
+    makan_pagi_porsi: "habis", makan_pagi_menu: "Roti gandum, susu", makan_pagi_catatan: "",
+    makan_siang_porsi: "sedikit", makan_siang_menu: "Nasi, ikan goreng, tempe", makan_siang_catatan: "Kurang nafsu makan siang ini",
+    snack_pagi: "Puding coklat", snack_sore: "Crackers",
+    tidur_mulai: "12:45", tidur_selesai: "13:45", tidur_kualitas: "gelisah",
+    toilet: "dibantu", toilet_frekuensi: "1x dibantu pengasuh",
+    mood: "biasa", mood_catatan: "Sedikit rewel saat makan siang, membaik setelah istirahat",
+    aktivitas_belajar: ["Puzzle", "Menggambar"],
+    bermain_catatan: "Bermain puzzle bersama teman, berhasil susun 12 keping",
+    catatan_umum: "Zahra sedikit rewel saat makan siang, namun mood membaik setelah istirahat.",
+    foto: [],
   },
   "2026-05-11": {
-    mandi: true,
-    makan: { pagi: true, siang: true, sore: true },
-    bermain: "Bola, berlari-lari di taman",
-    membaca: true,
-    Mewarnai: true,
-    bintang: 5,
-    catatan: "Hari yang luar biasa! Zahra sangat semangat dan menghabiskan semua makanannya. Sudah bisa hafal surat Al-Fatihah.",
+    makan_pagi_porsi: "habis", makan_pagi_menu: "Bubur ayam", makan_pagi_catatan: "Sangat lahap",
+    makan_siang_porsi: "habis", makan_siang_menu: "Nasi, sop, tahu goreng", makan_siang_catatan: "Minta tambah kuahnya",
+    snack_pagi: "Jus jeruk", snack_sore: "Pisang",
+    tidur_mulai: "12:15", tidur_selesai: "14:10", tidur_kualitas: "nyenyak",
+    toilet: "mandiri", toilet_frekuensi: "3x mandiri",
+    mood: "senang", mood_catatan: "Luar biasa ceria hari ini, banyak tertawa",
+    aktivitas_belajar: ["Membaca buku", "Menyanyi", "Menari", "Berhitung"],
+    bermain_catatan: "Aktif bermain bola dan berlari di taman, sangat berenergi",
+    catatan_umum: "Hari yang luar biasa! Zahra sudah bisa hafal surat Al-Fatihah.",
+    foto: [],
   },
   "2026-05-08": {
-    mandi: false,
-    makan: { pagi: true, siang: true, sore: false },
-    bermain: "Boneka, main masak-masakan",
-    membaca: true,
-    Mewarnai: false,
-    bintang: 3,
-    catatan: "Zahra kurang fit hari ini, sempat merasa tidak enak badan setelah makan siang. Diistirahatkan lebih banyak.",
+    makan_pagi_porsi: "setengah", makan_pagi_menu: "Nasi tim", makan_pagi_catatan: "Kurang nafsu makan",
+    makan_siang_porsi: "sedikit", makan_siang_menu: "Nasi, sayur bening", makan_siang_catatan: "Sempat mual setelah makan",
+    snack_pagi: "-", snack_sore: "-",
+    tidur_mulai: "11:45", tidur_selesai: "14:30", tidur_kualitas: "nyenyak",
+    toilet: "dibantu", toilet_frekuensi: "1x dibantu",
+    mood: "rewel", mood_catatan: "Kurang fit, sempat merasa tidak enak badan setelah makan siang",
+    aktivitas_belajar: ["Membaca buku"],
+    bermain_catatan: "Lebih banyak istirahat hari ini, bermain boneka sebentar",
+    catatan_umum: "Zahra kurang fit hari ini. Mohon dipantau kondisinya di rumah.",
+    foto: [],
   },
   "2026-05-07": {
-    mandi: true,
-    makan: { pagi: false, siang: true, sore: true },
-    bermain: "Krayon dan buku gambar",
-    membaca: true,
-    Mewarnai: true,
-    bintang: 4,
-    catatan: "Zahra menunjukkan kreativitas tinggi dalam menggambar hari ini. Gambar rumah dan keluarganya sangat detail dan berwarna.",
+    makan_pagi_porsi: "tidak", makan_pagi_menu: "-", makan_pagi_catatan: "Tidak mau makan pagi",
+    makan_siang_porsi: "habis", makan_siang_menu: "Nasi, ayam bakar, lalapan", makan_siang_catatan: "",
+    snack_pagi: "Susu UHT", snack_sore: "Kue bolu",
+    tidur_mulai: "12:30", tidur_selesai: "13:50", tidur_kualitas: "nyenyak",
+    toilet: "mandiri", toilet_frekuensi: "2x mandiri",
+    mood: "senang", mood_catatan: "Sangat kreatif dan bersemangat saat menggambar",
+    aktivitas_belajar: ["Menggambar", "Seni & Kerajinan", "Mewarnai"],
+    bermain_catatan: "Menggambar rumah dan keluarga dengan detail, sangat kreatif",
+    catatan_umum: "Zahra menunjukkan kreativitas tinggi dalam menggambar hari ini.",
+    foto: [],
   },
 };
 
+// ── Config ──────────────────────────────────────────────────────────────────
+const moodConfig: Record<Mood, { label: string; emoji: string; color: string; bg: string; border: string }> = {
+  senang:    { label: "Senang",    emoji: "😊", color: "#4a7500", bg: "#C4E02F18", border: "#C4E02F44" },
+  biasa:     { label: "Biasa",     emoji: "😐", color: "#1883FF", bg: "#1883FF12", border: "#1883FF33" },
+  rewel:     { label: "Rewel",     emoji: "😢", color: "#a0306a", bg: "#FFA9DD18", border: "#FFA9DD44" },
+  mengantuk: { label: "Mengantuk", emoji: "😴", color: "#a07000", bg: "#FEB70018", border: "#FEB70033" },
+};
+
+const porsiConfig: Record<PortiMakan, { label: string; color: string; bg: string; bar: number }> = {
+  habis:    { label: "Habis",    color: "#4a7500", bg: "#C4E02F18", bar: 100 },
+  setengah: { label: "Setengah", color: "#a07000", bg: "#FEB70018", bar: 50  },
+  sedikit:  { label: "Sedikit",  color: "#aa3366", bg: "#FFA9DD18", bar: 25  },
+  tidak:    { label: "Tidak",    color: "#999",    bg: "#F0EDE6",   bar: 0   },
+};
+
+const tidurConfig: Record<TidurKualitas, { label: string; emoji: string; color: string }> = {
+  nyenyak: { label: "Nyenyak",     emoji: "😴", color: "#4a7500" },
+  gelisah: { label: "Gelisah",     emoji: "😟", color: "#a07000" },
+  tidak:   { label: "Tidak Tidur", emoji: "😑", color: "#aa3366" },
+};
+
+const toiletConfig: Record<ToiletStatus, { label: string; color: string; bg: string }> = {
+  mandiri: { label: "Mandiri 🎉",  color: "#4a7500", bg: "#C4E02F18" },
+  dibantu: { label: "Dibantu",     color: "#a07000", bg: "#FEB70018" },
+  belum:   { label: "Belum",       color: "#aa3366", bg: "#FFA9DD18" },
+  tidak:   { label: "Tidak",       color: "#999",    bg: "#F0EDE6"   },
+};
+
 function formatDate(d: string) {
-  return new Date(d).toLocaleDateString("id-ID", {
-    weekday: "long", day: "numeric", month: "long", year: "numeric",
-  });
+  return new Date(d).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 }
 
-function formatDateShort(d: string) {
-  return new Date(d).toLocaleDateString("id-ID", {
-    day: "numeric", month: "short",
-  });
-}
-
-function StarRating({ value }: { value: number }) {
+// ── Sub-components ────────────────────────────────────────────────────────────
+function SectionCard({ icon, title, color, children }: { icon: string; title: string; color: string; children: React.ReactNode }) {
   return (
-    <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <svg
-          key={i}
-          width="16" height="16" viewBox="0 0 24 24"
-          fill={i <= value ? "#FEB700" : "none"}
-          stroke={i <= value ? "#FEB700" : "#D1D5DB"}
-          strokeWidth="2"
-        >
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-      ))}
+    <div className="bg-white rounded-[2rem] p-6 border border-[#FFE26F]/40 shadow-sm">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg" style={{ background: color + "20" }}>
+          {icon}
+        </div>
+        <h2 className="font-bold text-[#1A1A1A] text-[15px]">{title}</h2>
+      </div>
+      {children}
     </div>
   );
 }
 
-function CheckBadge({ ok, label }: { ok: boolean; label: string }) {
+function MakanRow({ label, porsi, menu, catatan }: { label: string; porsi: PortiMakan; menu: string; catatan: string }) {
+  const cfg = porsiConfig[porsi];
   return (
-    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold border transition-all
-      ${ok
-        ? "bg-[#C4E02F]/15 border-[#C4E02F]/40 text-[#4A4A4A]"
-        : "bg-[#FFA9DD]/10 border-[#FFA9DD]/30 text-[#4A4A4A]"
-      }`}
-    >
-      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] shrink-0
-        ${ok ? "bg-[#C4E02F]" : "bg-[#FFA9DD]"}`}
-      >
-        {ok ? "✓" : "✕"}
-      </span>
-      {label}
+    <div className="space-y-2 p-4 rounded-2xl" style={{ background: cfg.bg }}>
+      <div className="flex items-center justify-between">
+        <p className="text-[12px] font-bold text-[#1A1A1A]">{label}</p>
+        <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg" style={{ color: cfg.color, background: cfg.bg }}>
+          {cfg.label}
+        </span>
+      </div>
+      {/* Porsi bar */}
+      <div className="w-full h-1.5 bg-white/60 rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-700"
+          style={{ width: `${cfg.bar}%`, background: cfg.color }}
+        />
+      </div>
+      {menu && menu !== "-" && (
+        <p className="text-[12px] text-[#4A4A4A] font-medium">🍽 {menu}</p>
+      )}
+      {catatan && (
+        <p className="text-[11px] text-[#4A4A4A] italic font-light">"{catatan}"</p>
+      )}
     </div>
   );
 }
 
 export default function DailyLogOrangTua() {
   const [selectedDate, setSelectedDate] = useState(DATES[0]);
-  const log = LOGS[selectedDate];
+  const [loading, setLoading]           = useState(false);
+  const [displayDate, setDisplayDate]   = useState(DATES[0]);
+
+  const log = LOGS[displayDate];
+
+  const handleSelectDate = (d: string) => {
+    if (d === selectedDate) return;
+    setLoading(true);
+    setSelectedDate(d);
+    setTimeout(() => {
+      setDisplayDate(d);
+      setLoading(false);
+    }, 500);
+  };
+
+  const mood = log ? moodConfig[log.mood] : null;
+  const tidur = log ? tidurConfig[log.tidur_kualitas] : null;
+  const toilet = log ? toiletConfig[log.toilet] : null;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" style={{ fontFamily: "'Montserrat', sans-serif" }}>
 
-      {/* PAGE HEADER */}
+      {/* ── PAGE HEADER ── */}
       <div className="relative bg-white rounded-[2rem] p-6 border border-[#FFE26F]/40 shadow-sm overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-[#FFE26F]/20 rounded-full -translate-y-16 translate-x-16 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#1883FF]/10 rounded-full translate-y-10 -translate-x-10 pointer-events-none" />
@@ -136,32 +212,26 @@ export default function DailyLogOrangTua() {
             <p className="text-[#4A4A4A] text-sm font-light mt-1">Kelas Matahari · Pengasuh: Bu Sari</p>
           </div>
           <div className="flex items-center gap-2 bg-[#1883FF]/10 border border-[#1883FF]/20 rounded-2xl px-4 py-3">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1883FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-            <span className="text-sm font-bold text-[#1883FF]">{formatDate(selectedDate)}</span>
+            <span className="text-[#1883FF]">📅</span>
+            <span className="text-sm font-bold text-[#1883FF]">{formatDate(displayDate)}</span>
           </div>
         </div>
       </div>
 
-      {/* DATE SELECTOR */}
+      {/* ── DATE SELECTOR ── */}
       <div>
         <p className="text-xs font-bold text-[#4A4A4A] uppercase tracking-wider mb-3 ml-1">Pilih Tanggal</p>
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto pb-1">
           {DATES.map((d) => {
             const isSelected = d === selectedDate;
             return (
               <button
                 key={d}
-                onClick={() => setSelectedDate(d)}
+                onClick={() => handleSelectDate(d)}
                 className={`flex flex-col items-center px-4 py-3 rounded-2xl border-2 font-semibold transition-all whitespace-nowrap shrink-0
                   ${isSelected
                     ? "bg-[#1883FF] border-[#1883FF] text-white shadow-lg shadow-[#1883FF]/25"
-                    : "bg-white border-[#FFE26F] text-[#4A4A4A] hover:border-[#1883FF]/40 hover:bg-[#1883FF]/5"
-                  }`}
+                    : "bg-white border-[#FFE26F] text-[#4A4A4A] hover:border-[#1883FF]/40"}`}
               >
                 <span className="text-[10px] uppercase tracking-wider opacity-70">
                   {new Date(d).toLocaleDateString("id-ID", { weekday: "short" })}
@@ -176,88 +246,185 @@ export default function DailyLogOrangTua() {
         </div>
       </div>
 
-      {log && (
-        <div className="grid md:grid-cols-2 gap-6">
-
-          {/* RUTINITAS */}
-          <div className="bg-white rounded-[2rem] p-6 border border-[#FFE26F]/40 shadow-sm space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-[#99ADFF]/20 rounded-xl flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#99ADFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 11 12 14 22 4" />
-                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                </svg>
-              </div>
-              <h2 className="font-bold text-[#1A1A1A]">Rutinitas</h2>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <CheckBadge ok={log.mandi} label="Mandi" />
-              <CheckBadge ok={log.membaca} label="membaca" />
-              <CheckBadge ok={log.Mewarnai} label="Mewarnai" />
-              <CheckBadge ok={log.makan.pagi} label="Makan Pagi" />
-              <CheckBadge ok={log.makan.siang} label="Makan Siang" />
-              <CheckBadge ok={log.makan.sore} label="Makan Sore" />
-            </div>
-          </div>
-
-          {/* RATING & BERMAIN */}
-          <div className="space-y-4">
-            {/* Bintang */}
-            <div className="bg-white rounded-[2rem] p-6 border border-[#FFE26F]/40 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 bg-[#FFE26F]/40 rounded-xl flex items-center justify-center">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#FEB700" stroke="#FEB700" strokeWidth="1.5">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
-                </div>
-                <h2 className="font-bold text-[#1A1A1A]">Penilaian Hari Ini</h2>
-              </div>
+      {/* ── LOADING SKELETON ── */}
+      {loading && (
+        <div className="space-y-4 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-[2rem] p-6 border border-[#FFE26F]/40 shadow-sm space-y-3">
               <div className="flex items-center gap-3">
-                <StarRating value={log.bintang} />
-                <span className="text-2xl font-black text-[#1A1A1A]">{log.bintang}</span>
-                <span className="text-[#4A4A4A] text-sm font-light">/ 5</span>
+                <div className="w-9 h-9 rounded-xl bg-[#F0EDE6]" />
+                <div className="h-4 w-32 rounded-lg bg-[#F0EDE6]" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-3 w-full rounded bg-[#F0EDE6]" />
+                <div className="h-3 w-3/4 rounded bg-[#F0EDE6]" />
+                <div className="h-3 w-5/6 rounded bg-[#F0EDE6]" />
               </div>
             </div>
+          ))}
+        </div>
+      )}
 
-            {/* Bermain */}
-            <div className="bg-white rounded-[2rem] p-6 border border-[#FFE26F]/40 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 bg-[#FFA9DD]/20 rounded-xl flex items-center justify-center">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFA9DD" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-                    <line x1="9" y1="9" x2="9.01" y2="9" />
-                    <line x1="15" y1="9" x2="15.01" y2="9" />
-                  </svg>
+      {/* ── CONTENT ── */}
+      {!loading && log && (
+        <div className="space-y-6">
+
+          {/* ── MOOD HERO ── */}
+          {mood && (
+            <div
+              className="rounded-[2rem] p-6 border-2 flex items-center gap-5"
+              style={{ background: mood.bg, borderColor: mood.border }}
+            >
+              <div className="text-5xl">{mood.emoji}</div>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#4A4A4A] mb-1">Mood Hari Ini</p>
+                <p className="text-2xl font-black" style={{ color: mood.color }}>{mood.label}</p>
+                {log.mood_catatan && (
+                  <p className="text-[13px] text-[#4A4A4A] mt-1 font-light italic">"{log.mood_catatan}"</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="grid md:grid-cols-2 gap-6">
+
+            {/* ── MAKAN ── */}
+            <SectionCard icon="🍽️" title="Makan & Minum" color="#FEB700">
+              <div className="space-y-3">
+                <MakanRow label="Makan Pagi" porsi={log.makan_pagi_porsi} menu={log.makan_pagi_menu} catatan={log.makan_pagi_catatan} />
+                <MakanRow label="Makan Siang" porsi={log.makan_siang_porsi} menu={log.makan_siang_menu} catatan={log.makan_siang_catatan} />
+
+                {/* Snack */}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  {[
+                    { label: "Snack Pagi", value: log.snack_pagi },
+                    { label: "Snack Sore", value: log.snack_sore },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="p-3 rounded-xl bg-[#FFF8E8] border border-[#FFE26F]/30">
+                      <p className="text-[10px] font-bold text-[#4A4A4A] uppercase tracking-wider mb-1">{label}</p>
+                      <p className="text-[13px] font-semibold text-[#1A1A1A]">
+                        {value && value !== "-" ? value : <span className="text-[#ccc] font-normal">–</span>}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-                <h2 className="font-bold text-[#1A1A1A]">Aktivitas Bermain</h2>
               </div>
-              <p className="text-sm text-[#4A4A4A] font-medium bg-[#FFA9DD]/10 rounded-xl px-4 py-3 border border-[#FFA9DD]/20">
-                {log.bermain}
-              </p>
-            </div>
-          </div>
+            </SectionCard>
 
-          {/* CATATAN PENGASUH — full width */}
-          <div className="md:col-span-2 bg-white rounded-[2rem] p-6 border border-[#FFE26F]/40 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-[#C4E02F]/20 rounded-xl flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C4E02F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
+            {/* ── TIDUR & TOILET ── */}
+            <div className="space-y-4">
+              <SectionCard icon="🌙" title="Tidur Siang" color="#99ADFF">
+                <div className="space-y-3">
+                  {/* Jam tidur */}
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-[#99ADFF]/10">
+                    <div className="text-center flex-1">
+                      <p className="text-[10px] font-bold text-[#4A4A4A] uppercase tracking-wider mb-1">Mulai</p>
+                      <p className="text-xl font-black text-[#1A1A1A]">{log.tidur_mulai || "–"}</p>
+                    </div>
+                    <div className="text-[#99ADFF] text-xl">→</div>
+                    <div className="text-center flex-1">
+                      <p className="text-[10px] font-bold text-[#4A4A4A] uppercase tracking-wider mb-1">Bangun</p>
+                      <p className="text-xl font-black text-[#1A1A1A]">{log.tidur_selesai || "–"}</p>
+                    </div>
+                  </div>
+
+                  {/* Durasi */}
+                  {log.tidur_mulai && log.tidur_selesai && (() => {
+                    const [hM, mM] = log.tidur_mulai.split(":").map(Number);
+                    const [hS, mS] = log.tidur_selesai.split(":").map(Number);
+                    const dur = (hS * 60 + mS) - (hM * 60 + mM);
+                    if (dur <= 0) return null;
+                    return (
+                      <p className="text-[12px] text-center text-[#4A4A4A] font-medium">
+                        Durasi: <strong className="text-[#1A1A1A]">{Math.floor(dur/60)}j {dur%60}m</strong>
+                      </p>
+                    );
+                  })()}
+
+                  {/* Kualitas */}
+                  {tidur && (
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-[#F7F5F0]">
+                      <p className="text-[12px] font-semibold text-[#4A4A4A]">Kualitas Tidur</p>
+                      <span className="text-[13px] font-bold" style={{ color: tidur.color }}>
+                        {tidur.emoji} {tidur.label}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </SectionCard>
+
+              <SectionCard icon="🚽" title="Toilet Training" color="#1883FF">
+                {toilet && (
+                  <div className="space-y-3">
+                    <div
+                      className="p-3 rounded-xl flex items-center justify-between"
+                      style={{ background: toilet.bg }}
+                    >
+                      <p className="text-[12px] font-semibold text-[#4A4A4A]">Status</p>
+                      <span className="text-[13px] font-bold" style={{ color: toilet.color }}>{toilet.label}</span>
+                    </div>
+                    {log.toilet_frekuensi && (
+                      <p className="text-[12px] text-[#4A4A4A] font-medium px-1">{log.toilet_frekuensi}</p>
+                    )}
+                  </div>
+                )}
+              </SectionCard>
+            </div>
+
+            {/* ── AKTIVITAS ── */}
+            <SectionCard icon="📚" title="Aktivitas Belajar" color="#C4E02F">
+              <div className="space-y-4">
+                {/* Checklist aktivitas */}
+                {log.aktivitas_belajar.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {log.aktivitas_belajar.map((item) => (
+                      <span
+                        key={item}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold"
+                        style={{ background: "#C4E02F18", color: "#4a7500", border: "1px solid #C4E02F44" }}
+                      >
+                        <span className="text-[10px]">✓</span> {item}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[12px] text-[#ccc]">Tidak ada aktivitas tercatat</p>
+                )}
+
+                {/* Bermain bebas */}
+                {log.bermain_catatan && (
+                  <div>
+                    <p className="text-[11px] font-bold text-[#4A4A4A] uppercase tracking-wider mb-2">Bermain Bebas</p>
+                    <div className="p-3 rounded-xl bg-[#FFA9DD]/10 border border-[#FFA9DD]/20">
+                      <p className="text-[13px] text-[#4A4A4A] font-medium leading-relaxed">
+                        🧸 {log.bermain_catatan}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
-              <h2 className="font-bold text-[#1A1A1A]">Catatan Pengasuh</h2>
-            </div>
-            <div className="relative bg-[#FFFDF7] border border-[#FFE26F]/40 rounded-2xl p-5">
-              <div className="absolute top-4 left-4 w-1 h-[calc(100%-2rem)] bg-[#FFE26F] rounded-full" />
-              <p className="text-sm text-[#4A4A4A] leading-relaxed pl-4 font-light italic">
-                "{log.catatan}"
-              </p>
-            </div>
-            <p className="text-right text-xs text-[#4A4A4A] font-medium mt-2">— Bu Sari, Pengasuh Kelas Matahari</p>
-          </div>
+            </SectionCard>
 
+            {/* ── CATATAN PENGASUH ── */}
+            <SectionCard icon="💬" title="Catatan Pengasuh" color="#C4E02F">
+              <div className="relative bg-[#FFFDF7] border border-[#FFE26F]/40 rounded-2xl p-5">
+                <div className="absolute top-4 left-4 w-1 h-[calc(100%-2rem)] bg-[#FFE26F] rounded-full" />
+                <p className="text-sm text-[#4A4A4A] leading-relaxed pl-4 font-light italic">
+                  "{log.catatan_umum}"
+                </p>
+              </div>
+              <p className="text-right text-xs text-[#4A4A4A] font-medium mt-2">— Bu Sari, Pengasuh Kelas Matahari</p>
+            </SectionCard>
+
+          </div>
+        </div>
+      )}
+
+      {!loading && !log && (
+        <div className="bg-white rounded-[2rem] p-12 border border-[#FFE26F]/40 shadow-sm text-center">
+          <p className="text-4xl mb-4">📋</p>
+          <p className="text-[15px] font-bold text-[#1A1A1A]">Belum ada laporan</p>
+          <p className="text-[13px] text-[#4A4A4A] mt-1 font-light">Log untuk tanggal ini belum diisi oleh pengasuh</p>
         </div>
       )}
     </div>
