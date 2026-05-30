@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 
-export async function getDailyLogs(childId: number) {
+export async function getDailyLogs(childId: string) {
   const { data, error } = await supabase
     .from("daily_logs")
     .select("*")

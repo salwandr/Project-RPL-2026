@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request,
   });
@@ -31,19 +31,47 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+ const {
+  data: {user},
+ } = await supabase.auth.getUser();
 
-  const protectedRoutes = ["/admin", "/teacher", "/parent", "/dashboard"];
+ const pathname = request.nextUrl.pathname;
+ const isDashboardRoute = pathname.startsWith("/dashboard");
 
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
-  );
-
-  if (isProtectedRoute && !user) {
+ if (isDashboardRoute && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
+
+  if (!user) {
+    return response;
+  }
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (error || !profile?.role) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+  const role = profile.role;
+
+  const rolePaths: Record<string, string> = {
+  admin: "/dashboard/admin",
+  teacher: "/dashboard/pengasuh",
+  parent: "/dashboard/orang-tua",
+};
+
+const correctPath = rolePaths[role];
+
+if (!correctPath) {
+  return NextResponse.redirect(new URL("/login", request.url));
+}
+
+if (pathname.startsWith("/dashboard") && !pathname.startsWith(correctPath)) {
+  return NextResponse.redirect(new URL(correctPath, request.url));
+}
 
   return response;
 }

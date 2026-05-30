@@ -1,18 +1,25 @@
 import { supabase } from "@/lib/supabase";
 
+export type ProgramType = "Harian" | "Mingguan" | "Bulanan";
+export type PaymentStatus = "pending" | "approved" | "rejected";
+
 export type Child = {
-  id: number;
-  name: string;
-  kelas: string;
-  usia: string;
-  wali: string;
-  telepon: string;
-  avatar: string;
-  program: "Harian" | "Bulanan";
+  id: string;
+  full_name: string;
+  birth_date: string;
+  parent_id: string;
+  program?: ProgramType | null;
+  payment_status?: PaymentStatus | null;
   created_at?: string;
 };
 
-export type ChildInput = Omit<Child, "id" | "created_at">;
+export type ChildInput = {
+  full_name: string;
+  birth_date: string;
+  parent_id: string;
+  program?: ProgramType | null;
+  payment_status?: PaymentStatus | null;
+};
 
 export async function getChildren(): Promise<Child[]> {
   const { data, error } = await supabase
@@ -22,17 +29,6 @@ export async function getChildren(): Promise<Child[]> {
 
   if (error) throw error;
   return data ?? [];
-}
-
-export async function getChildById(childId: number): Promise<Child> {
-  const { data, error } = await supabase
-    .from("children")
-    .select("*")
-    .eq("id", childId)
-    .single();
-
-  if (error) throw error;
-  return data;
 }
 
 export async function createChild(childData: ChildInput): Promise<Child> {
@@ -47,7 +43,7 @@ export async function createChild(childData: ChildInput): Promise<Child> {
 }
 
 export async function updateChild(
-  childId: number,
+  childId: string,
   updates: Partial<ChildInput>
 ): Promise<Child> {
   const { data, error } = await supabase
@@ -59,14 +55,4 @@ export async function updateChild(
 
   if (error) throw error;
   return data;
-}
-
-export async function deleteChild(childId: number): Promise<boolean> {
-  const { error } = await supabase
-    .from("children")
-    .delete()
-    .eq("id", childId);
-
-  if (error) throw error;
-  return true;
 }

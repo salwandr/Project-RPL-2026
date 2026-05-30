@@ -320,7 +320,6 @@ export default function PengasuhPesanPage() {
                     transition: "all 0.15s ease",
                     cursor: "pointer",
                     border: "none",
-                    borderLeft: isActive ? "3px solid #1883FF" : "3px solid transparent",
                     width: "100%",
                   }}
                   onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "#F7F5F0"; }}

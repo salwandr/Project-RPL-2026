@@ -31,10 +31,69 @@ export async function getCurrentProfile() {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id, full_name, role")
     .eq("id", user.id)
     .single();
 
   if (error) throw error;
+  return data;
+}
+
+export async function registerParent({
+  fullName,
+  email,
+  password,
+}: {
+  fullName: string;
+  email: string;
+  password: string;
+}) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+        role: "parent",
+      },
+    },
+  });
+
+  if (error) throw error;
+
+  return data;
+}
+
+export async function verifyRegisterOtp({
+  email,
+  otp,
+  fullName,
+}: {
+  email: string;
+  otp: string;
+  fullName: string;
+}) {
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    token: otp.trim(),
+    type: "signup",
+  });
+
+  if (error) throw error;
+
+  const user = data.user;
+
+  if (!user) {
+    throw new Error("Verifikasi gagal.");
+  }
+
+  const { error: profileError } = await supabase.from("profiles").upsert({
+    id: user.id,
+    full_name: fullName,
+    role: "parent",
+  });
+
+  if (profileError) throw profileError;
+
   return data;
 }
