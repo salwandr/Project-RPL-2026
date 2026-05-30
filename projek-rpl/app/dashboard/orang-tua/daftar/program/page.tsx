@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { updateChild } from "@/lib/services/children";
-
 const programs = [
   {
     name: "Harian",
@@ -24,9 +23,15 @@ const programs = [
 
 export default function ProgramPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const mode = searchParams.get("mode");
+  const isPerpanjangan = mode === "perpanjangan";
+
+  const [qty, setQty] = useState(1);
   const [selectedProgram, setSelectedProgram] =
-    useState<"Harian" | "Mingguan"| "Bulanan" | null>(null);
-  const [interviewDate, setInterviewDate] = useState(" ");
+    useState<"Harian" | "Mingguan" | "Bulanan" | null>(null);
+  const [interviewDate, setInterviewDate] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleNext = async () => {
@@ -48,13 +53,18 @@ export default function ProgramPage() {
 
       await updateChild(childId, {
         program: selectedProgram,
-        interview_date: interviewDate,
+        interview_date: interviewDate || null,
         payment_status: "pending",
       });
 
-      sessionStorage.setItem("selected_program", selectedProgram);
+sessionStorage.setItem("selected_program", selectedProgram);
+sessionStorage.setItem("program_qty", String(isPerpanjangan ? qty : 1));
+sessionStorage.setItem(
+  "payment_mode",
+  isPerpanjangan ? "perpanjangan" : "pendaftaran"
+);
 
-      router.push("/dashboard/orang-tua/daftar/pembayaran");
+router.push("/dashboard/orang-tua/daftar/pembayaran");
     } catch (error: any) {
       console.error("Gagal memilih program:", error);
       alert(error.message || "Gagal memilih program");
@@ -79,37 +89,63 @@ export default function ProgramPage() {
         </p>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {programs.map((program) => {
-          const isSelected = selectedProgram === program.name;
+<div className="mt-6 grid gap-4 md:grid-cols-2">
+  {programs.map((program) => {
+    const isSelected = selectedProgram === program.name;
 
-          return (
-            <button
-              key={program.name}
-              type="button"
-              onClick={() => setSelectedProgram(program.name)}
-              className={`rounded-[2rem] border p-6 text-left shadow-sm transition ${
-                isSelected
-                  ? "border-sage-green bg-sage-green/10"
-                  : "border-warm-beige/40 bg-white hover:bg-warm-beige/20"
-              }`}
-            >
-              <p className="text-xl font-black text-foreground">
-                {program.name}
-              </p>
+    return (
+      <button
+        key={program.name}
+        type="button"
+        onClick={() => setSelectedProgram(program.name)}
+        className={`rounded-[2rem] border p-6 text-left shadow-sm transition ${
+          isSelected
+            ? "border-sage-green bg-sage-green/10"
+            : "border-warm-beige/40 bg-white hover:bg-warm-beige/20"
+        }`}
+      >
+        <p className="text-xl font-black text-foreground">
+          {program.name}
+        </p>
 
-              <p className="mt-2 text-sm text-gray-500">
-                {program.desc}
-              </p>
+        <p className="mt-2 text-sm text-gray-500">
+          {program.desc}
+        </p>
 
-              <p className="mt-6 text-2xl font-black text-sage-green">
-                Rp {program.price.toLocaleString("id-ID")}
-              </p>
-            </button>
-          );
-        })}
-      </div>
+        <p className="mt-6 text-2xl font-black text-sage-green">
+          Rp {program.price.toLocaleString("id-ID")}
+        </p>
+      </button>
+    );
+  })}
+</div>
 
+{isPerpanjangan && selectedProgram && (
+  <div className="mt-6 rounded-[2rem] border border-sage-green/20 bg-sage-green/5 p-6">
+    <p className="text-sm font-bold text-foreground">
+      Lama Perpanjangan
+    </p>
+
+    <div className="mt-3 flex items-center gap-3">
+      <input
+        type="number"
+        min={1}
+        value={qty}
+        onChange={(e) => setQty(Number(e.target.value))}
+        className="w-24 rounded-xl border border-warm-beige/40 px-3 py-2"
+      />
+
+      <span className="text-sm text-gray-500">
+        {selectedProgram === "Harian"
+          ? "hari"
+          : selectedProgram === "Mingguan"
+          ? "minggu"
+          : "bulan"}
+      </span>
+    </div>
+  </div>
+)}
+    {!isPerpanjangan && (
       <div className="mt-6">
         <label className="block text-sm font-semibold mb-2">
           Tanggal Interview
@@ -122,7 +158,7 @@ export default function ProgramPage() {
           className="w-full rounded-xl border p-3"
         />
       </div>
-
+    )}
       <button
         onClick={handleNext}
         disabled={loading}
@@ -131,6 +167,5 @@ export default function ProgramPage() {
         {loading ? "Menyimpan..." : "Lanjut ke Pembayaran"}
       </button>
     </div>
-    
   );
 }

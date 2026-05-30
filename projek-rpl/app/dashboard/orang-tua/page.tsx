@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { getChildren } from "@/lib/services/children";
+import { useRouter } from "next/navigation";
 import { getDailyLogs } from "@/lib/services/dailyLogs";
 
 export default function OrangTuaDashboard() {
   const [anakCount, setAnakCount] = useState(0);
   const [dailyLogCount, setDailyLogCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [latestLogs, setLatestLogs] = useState<any[]>([]);
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -21,6 +23,7 @@ export default function OrangTuaDashboard() {
           const logs = await getDailyLogs(firstChild.id);
 
           setDailyLogCount(logs?.length || 0);
+          setLatestLogs(logs?.slice(0, 3) || []);
         }
       } catch (error) {
         console.error("Failed to load orang tua dashboard:", error);
@@ -91,6 +94,35 @@ return (
         </p>
       </div>
     </div>
+    
+      <div className="mt-6 rounded-[2rem] border border-white bg-white p-6 shadow-sm">
+    <h2 className="text-lg font-bold text-foreground">
+      Daily Log Terbaru
+    </h2>
+
+    <div className="mt-4 space-y-3">
+      {latestLogs.length === 0 ? (
+        <p className="text-sm text-gray-500">
+          Belum ada daily log hari ini.
+        </p>
+      ) : (
+        latestLogs.map((log) => (
+          <div
+            key={log.id}
+            className="rounded-xl bg-sage-green/10 p-3"
+          >
+            <p className="text-xs font-medium text-sage-green">
+              {log.activity_time?.slice(0, 5)}
+            </p>
+
+            <p className="mt-1 text-sm font-semibold text-gray-800">
+              {log.title || "Aktivitas Anak"}
+            </p>
+          </div>
+        ))
+      )}
+    </div>
+  </div>
   </div>
 );
 }
