@@ -10,6 +10,10 @@ export type Child = {
   parent_id: string;
   program?: ProgramType | null;
   payment_status?: PaymentStatus | null;
+  interview_date?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  total_amount?: number | null;
   created_at?: string;
 };
 
@@ -18,7 +22,11 @@ export type ChildInput = {
   birth_date: string;
   parent_id: string;
   program?: ProgramType | null;
+  interview_date?: string | null;
   payment_status?: PaymentStatus | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  total_amount?: number | null;
 };
 
 export async function getChildren(): Promise<Child[]> {
@@ -29,6 +37,17 @@ export async function getChildren(): Promise<Child[]> {
 
   if (error) throw error;
   return data ?? [];
+}
+
+export async function getChildById(childId: string): Promise<Child> {
+  const { data, error } = await supabase
+    .from("children")
+    .select("*")
+    .eq("id", childId)
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
 export async function createChild(childData: ChildInput): Promise<Child> {

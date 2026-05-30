@@ -26,6 +26,7 @@ export default function ProgramPage() {
   const router = useRouter();
   const [selectedProgram, setSelectedProgram] =
     useState<"Harian" | "Mingguan"| "Bulanan" | null>(null);
+  const [interviewDate, setInterviewDate] = useState(" ");
   const [loading, setLoading] = useState(false);
 
   const handleNext = async () => {
@@ -47,6 +48,7 @@ export default function ProgramPage() {
 
       await updateChild(childId, {
         program: selectedProgram,
+        interview_date: interviewDate,
         payment_status: "pending",
       });
 
@@ -108,6 +110,19 @@ export default function ProgramPage() {
         })}
       </div>
 
+      <div className="mt-6">
+        <label className="block text-sm font-semibold mb-2">
+          Tanggal Interview
+        </label>
+
+        <input
+          type="date"
+          value={interviewDate}
+          onChange={(e) => setInterviewDate(e.target.value)}
+          className="w-full rounded-xl border p-3"
+        />
+      </div>
+
       <button
         onClick={handleNext}
         disabled={loading}
@@ -116,5 +131,6 @@ export default function ProgramPage() {
         {loading ? "Menyimpan..." : "Lanjut ke Pembayaran"}
       </button>
     </div>
+    
   );
 }
