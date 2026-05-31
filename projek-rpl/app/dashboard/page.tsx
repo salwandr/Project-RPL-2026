@@ -1,15 +1,32 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
 
-export default function DashboardPage() {
-  const role = "pengasuh";
+export default async function RootPage() {
+  const cookieStore = cookies();
 
-  if (role === "pengasuh") {
-    redirect("/dashboard/pengasuh");
-  }
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name) { return cookieStore.get(name)?.value; },
+      },
+    }
+  );
 
-  if (role === "orang_tua") {
-    redirect("/dashboard/orang-tua");
-  }
+  const { data: { user } } = await supabase.auth.getUser();
 
-  redirect("/masuk");
-}   
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role === "teacher") redirect("/dashboard/pengasuh");
+  if (profile?.role === "parent") redirect("/dashboard/orang-tua");
+
+  redirect("/login");
+}

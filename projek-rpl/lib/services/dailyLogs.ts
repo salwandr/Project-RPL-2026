@@ -83,10 +83,10 @@ export async function getDailyLogByDate(
     .select("*")
     .eq("child_id", childId)
     .eq("log_date", date)
-    .single();
+    .maybeSingle();
 
-  if (error && error.code !== "PGRST116") throw error;
-  return data ?? null;
+if (error) throw error;
+return data ?? null;
 }
 
 export async function createDailyLog(
@@ -132,13 +132,13 @@ export async function uploadDailyLogPhoto(
   filePath: string
 ): Promise<string> {
   const { error } = await supabase.storage
-    .from("daily-log-photos")
+    .from("foto_daily_log")
     .upload(filePath, file, { upsert: true });
 
   if (error) throw error;
 
   const { data: urlData, error: urlError } = await supabase.storage
-    .from("daily-log-photos")
+    .from("foto_daily_log")
     .createSignedUrl(filePath, 60 * 60);
 
   if (urlError) throw urlError;
