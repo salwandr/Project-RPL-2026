@@ -87,7 +87,7 @@ Stores read receipts for group chat.
 ## Storage
 
 Bucket:
-- daily-log-photos
+- foto_daily_log
 
 Purpose:
 - store photos attached to daily logs

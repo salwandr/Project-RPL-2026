@@ -46,7 +46,7 @@ export default function LoginPage() {
 
     if (profile?.role === "admin") {
       router.push("/dashboard/admin");
-    } else if (profile?.role === "pengasuh") {
+    } else if (profile?.role === "teacher") {
       router.push("/dashboard/pengasuh");
     } else if (profile?.role === "parent") {
       router.push("/dashboard/orang-tua");
