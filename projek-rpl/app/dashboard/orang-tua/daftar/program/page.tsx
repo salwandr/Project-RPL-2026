@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { updateChild } from "@/lib/services/children";
+import { updateChild, getChildren } from "@/lib/services/children";
 const programs = [
   {
     name: "Harian",
@@ -40,13 +40,21 @@ export default function ProgramPage() {
       return;
     }
 
-    const childId = sessionStorage.getItem("selected_child_id");
+    let childId = sessionStorage.getItem("selected_child_id");
 
-    if (!childId) {
-      alert("Data anak tidak ditemukan");
-      router.push("/dashboard/orang-tua/daftar/data-anak");
-      return;
-    }
+      if (!childId) {
+        const children = await getChildren();
+        const existingChild = children?.[0];
+
+        if (!existingChild) {
+          alert("Data anak tidak ditemukan");
+          router.push("/dashboard/orang-tua/daftar/data-anak");
+          return;
+        }
+
+        childId = existingChild.id;
+        sessionStorage.setItem("selected_child_id", childId);
+      }
 
     try {
       setLoading(true);

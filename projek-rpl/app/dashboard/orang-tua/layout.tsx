@@ -1,10 +1,94 @@
+"use client";
+
+import { useRouter, usePathname } from "next/navigation";
+import { logout, getCurrentProfile } from "@/lib/services/auth";
+import { useEffect, useState } from "react";
+import { getChildren } from "@/lib/services/children";
+
 export default function OrangTuaLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
+const [fullName, setFullName] = useState("Loading...");
+const router = useRouter();
+const pathname = usePathname();
+
+const handleLogout = async () => {
+  await logout();
+  router.replace("/login");
+};
+
+useEffect(() => {
+  async function loadProfile() {
+    try {
+      const profile = await getCurrentProfile();
+
+      if (profile) {
+        setFullName(profile.full_name);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  loadProfile();
+}, []);
+
+useEffect(() => {
+  async function checkEnrollmentAccess() {
+    try {
+      const children = await getChildren();
+      const child = children?.[0];
+
+      const allowedBeforePaid = [
+        "/dashboard/orang-tua",
+        "/dashboard/orang-tua/daftar/data-anak",
+        "/dashboard/orang-tua/daftar/program",
+        "/dashboard/orang-tua/daftar/pembayaran",
+        "/dashboard/orang-tua/profile",
+      ];
+
+      const allowedNoChild = [
+        "/dashboard/orang-tua",
+        "/dashboard/orang-tua/profile",
+        "/dashboard/orang-tua/daftar/data-anak",
+      ];
+
+      if (!child && !allowedNoChild.includes(pathname)) {
+        router.replace("/dashboard/orang-tua/daftar/data-anak");
+        return;
+      }
+
+      if (
+        child &&
+        !child.program &&
+        !allowedBeforePaid.includes(pathname)
+      ) {
+        router.replace("/dashboard/orang-tua/daftar/program");
+        return;
+      }
+
+      if (
+        child &&
+        child.program &&
+        child.payment_status !== "approved" &&
+        !allowedBeforePaid.includes(pathname)
+      ) {
+        router.replace("/dashboard/orang-tua/daftar/pembayaran");
+        return;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  checkEnrollmentAccess();
+}, [pathname, router]);
+
   return (
-    <div className="flex min-h-screen bg-background text-foreground font-montserrat">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground font-montserrat">
       
       {/* SIDEBAR */}
       <aside className="hidden md:flex w-72 flex-col border-r border-warm-beige/40 bg-white/80 backdrop-blur-xl p-6">
@@ -21,14 +105,14 @@ export default function OrangTuaLayout({
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-col gap-3">
+        <nav className="flex flex-col gap-0">
           {[
             {
               label: "Dashboard",
               href: "/dashboard/orang-tua",
             },
             {
-              label: "Daftar Anak",
+              label: "Pendaftaran",
               href: "/dashboard/orang-tua/daftar/data-anak",
             },
             {
@@ -53,7 +137,7 @@ export default function OrangTuaLayout({
               href={item.href}
               className="
                 rounded-2xl
-                px-4
+                px-2
                 py-3
                 text-sm
                 font-semibold
@@ -68,7 +152,7 @@ export default function OrangTuaLayout({
         </nav>
 
         {/* Bottom Card */}
-        <div className="mt-auto rounded-3xl bg-sage-green/10 p-5 border border-sage-green/10">
+        <div className="mt-auto rounded-3xl bg-sage-green/10 p-3 border border-sage-green/10">
           <p className="text-sm font-bold text-sage-green">
             Tanika Daycare
           </p>
@@ -77,6 +161,12 @@ export default function OrangTuaLayout({
             Pantau aktivitas anak dengan mudah dan realtime.
           </p>
         </div>
+        <button
+          onClick={handleLogout}
+          className="mt-3 rounded-2xl bg-foreground px-4 py-3 text-sm font-bold text-warm-beige transition hover:opacity-90"
+        >
+          Logout
+        </button>
       </aside>
 
       {/* MAIN CONTENT */}
@@ -102,7 +192,7 @@ export default function OrangTuaLayout({
 
               <div>
                 <p className="text-sm font-bold">
-                  Orang Tua
+                  {fullName}
                 </p>
 
                 <p className="text-xs text-[#4A4A4A]">

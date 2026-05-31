@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Child, getChildren, createChild } from "@/lib/services/children";
+import { getCurrentProfile } from "@/lib/services/auth";
 
 export default function DataAnakPage() {
   const router = useRouter();
@@ -17,16 +18,23 @@ export default function DataAnakPage() {
   const [pendingChild, setPendingChild] = useState<Child | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+useEffect(() => {
   async function loadChildren() {
     try {
+      const profile = await getCurrentProfile();
+      console.log("CURRENT PROFILE:", profile);
+
       const data = await getChildren();
+      console.log("DATA ANAK CHILDREN:", data);
 
       setChildren(data);
 
       const pending = data.find(
-        (child) => child.payment_status === "pending"
+        (child) => child.payment_status !== "approved"
       );
+      console.log("PENDING CHILD:", pending);
+      console.log("PENDING PROGRAM:", pending?.program);
+      console.log("PENDING PAYMENT:", pending?.payment_status);
 
       setPendingChild(pending ?? null);
     } catch (error) {
@@ -36,6 +44,8 @@ export default function DataAnakPage() {
 
   loadChildren();
 }, []);
+
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({
@@ -103,7 +113,7 @@ export default function DataAnakPage() {
         onClick={() => {
           sessionStorage.setItem("selected_child_id", pendingChild.id);
 
-          if (!pendingChild.program || !pendingChild.interview_date) {
+          if (!pendingChild.program) {
             router.push("/dashboard/orang-tua/daftar/program");
           } else {
             router.push("/dashboard/orang-tua/daftar/pembayaran");

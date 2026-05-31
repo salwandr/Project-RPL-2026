@@ -18,6 +18,7 @@ interface Child {
   birth_date: string | null;
   program: string | null;
   payment_status: string | null;
+  end_date: string | null;
 }
 
 function getInitials(name: string) {
@@ -70,7 +71,7 @@ export default function ProfileOrangTuaPage() {
 
         const { data: childrenData, error: childrenError } = await supabase
           .from("children")
-          .select("id, full_name, birth_date, program, payment_status")
+          .select("id, full_name, birth_date, program, payment_status, end_date")
           .eq("parent_id", user.id)
           .order("full_name");
 
@@ -269,17 +270,39 @@ export default function ProfileOrangTuaPage() {
                     </p>
                   </div>
                   {/* Payment status badge */}
-                  {child.payment_status && (
-                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg shrink-0
-                      ${child.payment_status === "paid"
-                        ? "bg-sage-green/20 text-sage-green"
-                        : child.payment_status === "pending"
-                        ? "bg-yellow-50 text-yellow-600"
-                        : "bg-red-50 text-red-400"}`}>
-                      {child.payment_status === "paid" ? "Lunas" :
-                       child.payment_status === "pending" ? "Pending" : "Belum bayar"}
-                    </span>
-                  )}
+                  {child.payment_status && (() => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    const endDate = child.end_date ? new Date(child.end_date) : null;
+                    const isExpired = endDate ? endDate < today : false;
+
+                    return (
+                      <span
+                        className={`text-[10px] font-bold px-2.5 py-1 rounded-lg shrink-0 ${
+                          isExpired
+                            ? "bg-red-50 text-red-500"
+                            : child.payment_status === "approved"
+                            ? "bg-green-100 text-green-500"
+                            : child.payment_status === "waiting_payment"
+                            ? "bg-yellow-50 text-yellow-600"
+                            : child.payment_status === "waiting_admin"
+                            ? "bg-yellow-50 text-yellow-600"
+                            : "bg-red-50 text-red-500"
+                        }`}
+                      >
+                        {isExpired
+                          ? "Expired"
+                          : child.payment_status === "approved"
+                          ? "Aktif"
+                          : child.payment_status === "waiting_payment"
+                          ? "Menunggu Pembayaran"
+                          : child.payment_status === "waiting_admin"
+                          ? "Menunggu Admin"
+                          : "Belum bayar"}
+                      </span>
+                    );
+                  })()}
                 <button
                   onClick={() => {
                     sessionStorage.setItem("selected_child_id", child.id);

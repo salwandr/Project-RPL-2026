@@ -1,26 +1,36 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { getChildById } from "@/lib/services/children";
+import { getChildById, getChildren } from "@/lib/services/children";
 
 export default function PembayaranPage() {
   const router = useRouter();
   const [child, setChild] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     async function loadPaymentData() {
       try {
-        const childId = sessionStorage.getItem("selected_child_id");
+    const childId = sessionStorage.getItem("selected_child_id");
 
-        if (!childId) {
-          router.push("/dashboard/orang-tua/daftar/data-anak");
-          return;
-        }
+    let data = null;
 
-        const data = await getChildById(childId);
-        setChild(data);
+    if (childId) {
+      data = await getChildById(childId);
+    } else {
+      const children = await getChildren();
+      data = children?.[0] ?? null;
+    }
+
+    if (!data) {
+      router.push("/dashboard/orang-tua/daftar/data-anak");
+      return;
+    }
+    setChild(data);
       } catch (error) {
         console.error("Gagal load pembayaran:", error);
       } finally {
@@ -34,6 +44,56 @@ export default function PembayaranPage() {
   if (loading) return <p>Loading pembayaran...</p>;
 
   const hasAmount = child?.total_amount !== null && child?.total_amount !== undefined;
+
+  if (!child) {
+    return <p className="p-6">Loading payment data...</p>;
+  }
+
+  const handleUploadProof = async () => {
+  if (!child) return;
+
+  if (!proofFile) {
+    alert("Pilih file bukti pembayaran dulu");
+    return;
+  }
+
+  try {
+    setUploading(true);
+
+    const fileExt = proofFile.name.split(".").pop();
+    const filePath = `${child.id}/${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("payment-proofs")
+      .upload(filePath, proofFile);
+
+    if (uploadError) throw uploadError;
+
+    const { data: publicUrlData } = supabase.storage
+      .from("payment-proofs")
+      .getPublicUrl(filePath);
+
+    const { error: updateError } = await supabase
+      .from("children")
+      .update({
+        payment_proof_url: publicUrlData.publicUrl,
+      })
+      .eq("id", child.id);
+
+    if (updateError) throw updateError;
+
+    alert("Bukti pembayaran berhasil diupload. Tunggu konfirmasi admin.");
+    setChild({
+      ...child,
+      payment_proof_url: publicUrlData.publicUrl,
+    });
+  } catch (error: any) {
+    console.error(error);
+    alert(error.message || "Gagal upload bukti pembayaran");
+  } finally {
+    setUploading(false);
+  }
+};
 
   return (
     <div className="mx-auto max-w-3xl font-montserrat">
@@ -53,7 +113,7 @@ export default function PembayaranPage() {
 
       <div className="mt-6 rounded-[2rem] border border-warm-beige/40 bg-white p-6 shadow-sm">
         <p className="text-sm text-gray-500">Nama Anak</p>
-        <p className="text-xl font-black">{child.full_name}</p>
+        <p className="text-xl font-black">{child?.full_name || "loading..."}</p>
 
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl bg-warm-beige/30 p-4">
@@ -97,6 +157,35 @@ export default function PembayaranPage() {
               <p className="mt-2 text-2xl font-black">BCA 1234567890</p>
               <p className="text-sm text-gray-500">a.n. Tanika Daycare</p>
             </div>
+
+            <div className="mt-6 rounded-2xl border border-warm-beige/40 bg-white p-5">
+  <p className="font-bold">Upload Bukti Pembayaran</p>
+
+  <input
+    type="file"
+    accept="image/*,.pdf"
+    onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+    className="mt-4 w-full rounded-xl border border-warm-beige/40 p-3"
+  />
+
+  <button
+    onClick={handleUploadProof}
+    disabled={uploading}
+    className="mt-4 w-full rounded-2xl bg-foreground px-5 py-4 font-bold text-warm-beige disabled:opacity-50"
+  >
+    {uploading ? "Mengupload..." : "Upload Bukti Pembayaran"}
+  </button>
+
+  {child.payment_proof_url && (
+    <a
+      href={child.payment_proof_url}
+      target="_blank"
+      className="mt-3 block text-sm font-bold text-blue-500"
+    >
+      Lihat bukti yang sudah diupload
+    </a>
+  )}
+</div>
           </>
         )}
 
