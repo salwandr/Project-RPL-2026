@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Profile {
   id: string;
@@ -44,6 +46,10 @@ export default function ProfileOrangTuaPage() {
   const [email, setEmail] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     async function loadProfile() {
@@ -79,6 +85,36 @@ export default function ProfileOrangTuaPage() {
 
     loadProfile();
   }, []);
+  
+  async function handleUpdateName() {
+  if (!profile || !newName.trim()) return;
+
+  try {
+    setSavingName(true);
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: newName.trim(),
+      })
+      .eq("id", profile.id);
+
+    if (error) throw error;
+
+    setProfile({
+      ...profile,
+      full_name: newName.trim(),
+    });
+
+    setIsEditingName(false);
+  } catch (err) {
+    alert("Gagal mengubah nama.");
+  } finally {
+    setSavingName(false);
+  }
+}
+
+
 
   if (loading) {
     return (
@@ -135,16 +171,71 @@ export default function ProfileOrangTuaPage() {
       <div className="bg-white rounded-[2rem] p-6 border border-stone-100 shadow-sm">
         <p className="text-[10px] font-bold uppercase tracking-[1.5px] text-stone-400 mb-4">Informasi Akun</p>
         <div className="space-y-3">
-          {[
-            { label: "Nama Lengkap", value: profile?.full_name },
-            { label: "Email",        value: email },
-            { label: "Bergabung",    value: profile?.created_at ? formatDate(profile.created_at) : "—" },
-          ].map(({ label, value }) => (
-            <div key={label} className="flex items-center justify-between py-3 border-b border-stone-50 last:border-0">
-              <p className="text-[12px] text-stone-400 font-medium">{label}</p>
-              <p className="text-[13px] font-semibold text-stone-700">{value ?? "—"}</p>
-            </div>
-          ))}
+<div className="space-y-3">
+
+  {/* Nama Lengkap */}
+  <div className="flex items-center justify-between py-3 border-b border-stone-50">
+    <p className="text-[12px] text-stone-400 font-medium">
+      Nama Lengkap
+    </p>
+
+    {!isEditingName ? (
+      <div className="flex items-center gap-3">
+        <p className="text-[13px] font-semibold text-stone-700">
+          {profile?.full_name ?? "—"}
+        </p>
+
+      <button
+        onClick={() => {
+          setNewName(profile?.full_name ?? "");
+          setIsEditingName(true);
+        }}
+        className="p-1.5 rounded-lg hover:bg-stone-100 transition"
+      >
+        <Pencil size={14} className="text-sage-green" />
+      </button>
+      </div>
+    ) : (
+      <div className="flex items-center gap-2">
+        <input
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          className="border border-stone-200 rounded-lg px-3 py-1 text-[12px]"
+        />
+
+        <button
+          onClick={handleUpdateName}
+          disabled={savingName}
+          className="px-3 py-1 rounded-lg bg-sage-green text-white text-[11px] font-bold"
+        >
+          {savingName ? "..." : "Simpan"}
+        </button>
+
+        <button
+          onClick={() => setIsEditingName(false)}
+          className="px-3 py-1 rounded-lg bg-stone-100 text-[11px] font-bold"
+        >
+          Batal
+        </button>
+      </div>
+    )}
+  </div>
+
+  {/* Email */}
+  <div className="flex items-center justify-between py-3 border-b border-stone-50">
+    <p className="text-[12px] text-stone-400 font-medium">Email</p>
+    <p className="text-[13px] font-semibold text-stone-700">{email}</p>
+  </div>
+
+  {/* Bergabung */}
+  <div className="flex items-center justify-between py-3">
+    <p className="text-[12px] text-stone-400 font-medium">Bergabung</p>
+    <p className="text-[13px] font-semibold text-stone-700">
+      {profile?.created_at ? formatDate(profile.created_at) : "—"}
+    </p>
+  </div>
+
+</div>
         </div>
       </div>
 
@@ -189,6 +280,15 @@ export default function ProfileOrangTuaPage() {
                        child.payment_status === "pending" ? "Pending" : "Belum bayar"}
                     </span>
                   )}
+                <button
+                  onClick={() => {
+                    sessionStorage.setItem("selected_child_id", child.id);
+                    router.push("/dashboard/orang-tua/daftar/program?mode=perpanjangan");
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-sage-green text-white text-sm font-bold"
+                  >
+                  Perpanjangan
+                </button>
                 </div>
 
                 {/* Detail */}
