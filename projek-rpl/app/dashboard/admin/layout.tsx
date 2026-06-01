@@ -41,7 +41,7 @@ export default function AdminLayout({
             },
             {
               label: "Children",
-              href: "/dashboard/admin/children",
+              href: "/dashboard/admin/data-anak",
             },
             {
               label: "Daily Logs",
@@ -53,11 +53,11 @@ export default function AdminLayout({
             },
             {
               label: "Parents",
-              href: "/dashboard/admin/parents",
+              href: "/dashboard/admin/orang-tua",
             },
             {
               label: "Teachers",
-              href: "/dashboard/admin/teachers",
+              href: "/dashboard/admin/pengasuh",
             },
             {
               label: "Profile",

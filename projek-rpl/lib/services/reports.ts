@@ -1,17 +1,33 @@
 import { supabase } from "@/lib/supabase";
 
-export async function getReports(childId: number) {
-  const { data, error } = await supabase
+export async function getReports(childId?: string) {
+  let query = supabase
     .from("reports")
-    .select("*")
-    .eq("child_id", childId)
+    .select(`
+      *,
+      children (
+        full_name
+      )
+    `)
     .order("report_date", { ascending: false });
+
+  if (childId) {
+    query = query.eq("child_id", childId);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return data ?? [];
 }
 
-export async function createReport(reportData: Record<string, unknown>) {
+export async function createReport(reportData: {
+  child_id: string;
+  teacher_id?: string;
+  report_type: "weekly" | "monthly";
+  content: string;
+  report_date?: string;
+}) {
   const { data, error } = await supabase
     .from("reports")
     .insert(reportData)
@@ -23,7 +39,7 @@ export async function createReport(reportData: Record<string, unknown>) {
 }
 
 export async function updateReport(
-  reportId: number,
+  reportId: string,
   updates: Record<string, unknown>
 ) {
   const { data, error } = await supabase
@@ -37,11 +53,8 @@ export async function updateReport(
   return data;
 }
 
-export async function deleteReport(reportId: number) {
-  const { error } = await supabase
-    .from("reports")
-    .delete()
-    .eq("id", reportId);
+export async function deleteReport(reportId: string) {
+  const { error } = await supabase.from("reports").delete().eq("id", reportId);
 
   if (error) throw error;
   return true;

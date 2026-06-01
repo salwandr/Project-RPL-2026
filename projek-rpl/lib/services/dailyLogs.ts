@@ -144,3 +144,38 @@ export async function uploadDailyLogPhoto(
   if (urlError) throw urlError;
   return urlData.signedUrl;
 }
+
+export interface AdminDailyLog extends DailyLog {
+  children: {
+    full_name: string;
+  } | null;
+  profiles: {
+    full_name: string;
+  } | null;
+}
+
+export async function getAllDailyLogs(): Promise<AdminDailyLog[]> {
+  const { data, error } = await supabase
+    .from("daily_logs")
+    .select(`
+      *,
+      children(full_name),
+      profiles(full_name)
+    `)
+    .order("log_date", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getTodayDailyLogsCount(): Promise<number> {
+  const today = new Date().toISOString().split("T")[0];
+
+  const { count, error } = await supabase
+    .from("daily_logs")
+    .select("*", { count: "exact", head: true })
+    .eq("log_date", today);
+
+  if (error) throw error;
+  return count ?? 0;
+}

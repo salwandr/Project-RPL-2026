@@ -17,14 +17,13 @@ interface Child {
   avatarColor: string;
   jamMasuk: string | null;
   checkInStatus: CheckInStatus;
-  // dari pickup_requests
   pickupRequestId: string | null;
   penjemput: string | null;
   relationship: string | null;
-  pickupRequestStatus: string | null; // "menunggu" | "approved" — status di DB
-  status: PickupStatus;              // derived: "dijemput" kalau approved
+  pickupRequestStatus: string | null; 
+  status: PickupStatus;              
   jamJemput: string | null;
-  hasOrangTuaRequest: boolean;       // true kalau ortu sudah isi form (status="menunggu")
+  hasOrangTuaRequest: boolean;       
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
