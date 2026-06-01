@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { updateChild, getChildren } from "@/lib/services/children";
+
 const programs = [
   {
     name: "Harian",
@@ -21,7 +22,7 @@ const programs = [
   },
 ] as const;
 
-export default function ProgramPage() {
+function ProgramContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -175,5 +176,13 @@ router.push("/dashboard/orang-tua/daftar/pembayaran");
         {loading ? "Menyimpan..." : "Lanjut ke Pembayaran"}
       </button>
     </div>
+  );
+}
+
+export default function ProgramPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading...</div>}>
+      <ProgramContent />
+    </Suspense>
   );
 }
