@@ -39,10 +39,10 @@ type LogForm = {
 };
 
 const emptyForm: LogForm = {
-  makan_pagi_porsi: "",
+  makan_pagi_porsi: "" as PorsiMakan,
   makan_pagi_menu: "",
   makan_pagi_catatan: "",
-  makan_siang_porsi: "",
+  makan_siang_porsi: "" as PorsiMakan,
   makan_siang_menu: "",
   makan_siang_catatan: "",
   snack_pagi: "",
