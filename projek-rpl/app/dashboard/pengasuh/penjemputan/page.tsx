@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Search, Clock, CheckCircle2, Car, Camera, X, Image as ImageIcon, Send, UserX, Lock, Bell } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { checkOutChild } from "@/lib/services/attendance";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -23,6 +24,7 @@ interface Child {
   pickupRequestStatus: string | null; 
   status: PickupStatus;              
   jamJemput: string | null;
+  jamCheckout: string | null;
   hasOrangTuaRequest: boolean;       
 }
 
@@ -217,7 +219,7 @@ export default function PengasuhPenjemputanPage() {
 
       const { data: attData, error: attErr } = await supabase
         .from("attendance")
-        .select("child_id, status, jam_checkin")
+        .select("child_id, status, jam_checkin, jam_checkout")
         .eq("date", today);
       if (attErr) throw attErr;
 
@@ -242,6 +244,7 @@ export default function PengasuhPenjemputanPage() {
 
         const checkInStatus: CheckInStatus = (att?.status as CheckInStatus) ?? "belum";
         const isApproved = pickup?.status === "approved";
+        const isCheckedOut = !!att?.jam_checkout;
         // hasOrangTuaRequest: ortu sudah kirim form, tapi belum di-checkout pengasuh
         const hasOrangTuaRequest = !!pickup && pickup.status === "menunggu";
 
@@ -257,11 +260,9 @@ export default function PengasuhPenjemputanPage() {
           penjemput: pickup?.pickup_person_name ?? null,
           relationship: pickup?.relationship ?? null,
           pickupRequestStatus: pickup?.status ?? null,
-          status: isApproved ? "dijemput" : "menunggu",
-          // kalau sudah approved, tampilkan jam jemput aktual
-          jamJemput: isApproved
-            ? formatTime(pickup?.pickup_time ?? null)
-            : formatTime(pickup?.pickup_time ?? null), // jam estimasi dari ortu
+          status: isCheckedOut || isApproved ? "dijemput" : "menunggu",
+          jamJemput: formatTime(pickup?.pickup_time ?? null),
+          jamCheckout: formatTime(att?.jam_checkout ?? null),
           hasOrangTuaRequest,
           fotoPenjemputan: null,
         };
@@ -345,6 +346,9 @@ export default function PengasuhPenjemputanPage() {
         });
       if (error) throw error;
     }
+
+    
+    await checkOutChild(childId, now);
 
     await loadData();
     setModalChild(null);
@@ -592,7 +596,11 @@ export default function PengasuhPenjemputanPage() {
                           style={{ background: "#C4E02F25", color: "#5a8a00" }}>
                           <CheckCircle2 size={10} /> Dijemput
                         </span>
-                        {child.jamJemput && <p className="text-[9px] text-[#4A4A4A] pl-1">{child.jamJemput}</p>}
+                        {child.jamCheckout ? (
+                          <p className="text-[9px] text-[#4A4A4A] pl-1">Jam pulang: {child.jamCheckout}</p>
+                        ) : child.jamJemput ? (
+                          <p className="text-[9px] text-[#4A4A4A] pl-1">Perkiraan: {child.jamJemput}</p>
+                        ) : null}
                       </>
                     ) : blocked ? (
                       <span className="text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 w-fit"
@@ -620,9 +628,14 @@ export default function PengasuhPenjemputanPage() {
                   {/* Aksi */}
                   <div className="col-span-1 relative">
                     {child.status === "dijemput" ? (
-                      <div className="flex items-center gap-1 text-[#5a8a00]">
-                        <CheckCircle2 size={13} />
-                        <span className="text-[10px] font-semibold">Selesai</span>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1 text-[#5a8a00]">
+                          <CheckCircle2 size={13} />
+                          <span className="text-[10px] font-semibold">Selesai</span>
+                        </div>
+                        {child.jamCheckout && (
+                          <span className="text-[9px] text-[#4A4A4A]">Pulangkan {child.jamCheckout}</span>
+                        )}
                       </div>
                     ) : isAbsen ? (
                       <span className="text-[10px] text-[#999] font-medium flex items-center gap-1">

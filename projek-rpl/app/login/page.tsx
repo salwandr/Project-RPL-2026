@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { login, getCurrentProfile, registerParent, verifyRegisterOtp, } from "@/lib/services/auth";
+import {
+  login,
+  getCurrentProfile,
+  registerParent,
+  verifyRegisterOtp,
+  resendRegisterOtp,
+} from "@/lib/services/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,117 +20,113 @@ export default function LoginPage() {
 
   const [fullName, setFullName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
 
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
 
   const [registerError, setRegisterError] = useState("");
   const [registerLoading, setRegisterLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [sendingOtp, setSendingOtp] = useState(false);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
 
- const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
+    setLoginError("");
+    setLoginLoading(true);
 
-  console.log("LOGIN CLICKED");
+    try {
+      await login(email, password);
 
-  setLoginError("");
-  setLoginLoading(true);  
+      const profile = await getCurrentProfile();
 
-  try {
-    console.log("BEFORE LOGIN");
+      if (profile?.role === "admin") {
+        router.push("/dashboard/admin");
+      } else if (profile?.role === "teacher") {
+        router.push("/dashboard/pengasuh");
+      } else if (profile?.role === "parent") {
+        router.push("/dashboard/orang-tua");
+      } else {
+        setLoginError("Role akun tidak ditemukan.");
+      }
+    } catch (error) {
+      console.error("LOGIN ERROR:", error);
+      setLoginError("Email atau password salah, atau email belum diverifikasi.");
+    } finally {
+      setLoginLoading(false);
+    }
+  };
 
-    await login(email, password);
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    console.log("LOGIN SUCCESS");
+    setRegisterError("");
 
-    const profile = await getCurrentProfile();
+    if (!fullName || !email || !password || !confirmPassword) {
+      setRegisterError("Isi semua data dulu.");
+      return;
+    }
 
-    console.log("PROFILE:", profile);
+    if (password !== confirmPassword) {
+      setRegisterError("Password dan ulangi password tidak sama.");
+      return;
+    }
 
-    if (profile?.role === "admin") {
-      router.push("/dashboard/admin");
-    } else if (profile?.role === "teacher") {
-      router.push("/dashboard/pengasuh");
-    } else if (profile?.role === "parent") {
+    try {
+      setRegisterLoading(true);
+
+      if (!otpSent) {
+        await registerParent({
+          fullName,
+          email,
+          password,
+        });
+
+        setOtpSent(true);
+        setRegisterError("");
+        return;
+      }
+
+      if (!otp) {
+        setRegisterError("Masukkan kode OTP dulu.");
+        return;
+      }
+
+      await verifyRegisterOtp({
+        email,
+        otp,
+        fullName,
+      });
+
       router.push("/dashboard/orang-tua");
+    } catch (error) {
+      console.error("REGISTER ERROR:", error);
+      setRegisterError("Gagal daftar/verifikasi. Cek kode OTP terbaru.");
+    } finally {
+      setRegisterLoading(false);
     }
-    else {
-      setLoginError("Role akun tidak ditemukan.");
+  };
+
+  const handleResendOtp = async () => {
+    setRegisterError("");
+
+    if (!email) {
+      setRegisterError("Email harus diisi dulu.");
+      return;
     }
-  } catch (error) {
-    console.error("LOGIN ERROR:", error);
-    setLoginError("Email atau password salah.");
-  } finally {
-    setLoginLoading(false);
-  }
-};
 
-  const handleSendOtp = async () => {
-  setRegisterError("");
-
-  if (!fullName || !email || !password || !confirmPassword) {
-    setRegisterError("Isi nama, email, password, dan ulangi password dulu.");
-    return;
-  }
-
-  if (password !== confirmPassword) {
-    setRegisterError("Password dan ulangi password tidak sama.");
-    return;
-  }
-
-  try {
-    setSendingOtp(true);
-
-    await registerParent({
-      fullName,
-      email,
-      password,
-    });
-
-    setOtpSent(true);
-  } catch (error) {
-    console.error(error);
-    setRegisterError("Gagal mengirim kode OTP.");
-  } finally {
-    setSendingOtp(false);
-  }
-};
-
-const handleRegister = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  setRegisterError("");
-
-  if (!otpSent) {
-    setRegisterError("Kirim kode OTP dulu.");
-    return;
-  }
-
-  if (!otp) {
-    setRegisterError("Masukkan kode OTP.");
-    return;
-  }
-
-  try {
-    setRegisterLoading(true);
-
-    await verifyRegisterOtp({
-      email,
-      otp,
-      fullName,
-    });
-
-    setMode("login");
-  } catch (error) {
-    console.error(error);
-    setRegisterError("Kode OTP salah atau expired.");
-  } finally {
-    setRegisterLoading(false);
-  }
-};
+    try {
+      setResendLoading(true);
+      await resendRegisterOtp(email);
+      setRegisterError("");
+    } catch (error) {
+      console.error("RESEND OTP ERROR:", error);
+      setRegisterError("Gagal kirim ulang OTP.");
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   return (
     <div className="grid min-h-screen grid-cols-1 bg-[#FAFAF7] lg:grid-cols-2">
@@ -211,16 +213,14 @@ const handleRegister = async (e: React.FormEvent) => {
                     Email
                   </label>
 
-                  <div className="flex gap-3">
-                    <input
-                      type="email"
-                      placeholder="email@contoh.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="flex-1 rounded-2xl border border-yellow-300 bg-white px-6 py-4 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                      required
-                    />
-                  </div>  
+                  <input
+                    type="email"
+                    placeholder="email@contoh.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full rounded-2xl border border-yellow-300 bg-white px-6 py-4 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    required
+                  />
                 </div>
 
                 <div>
@@ -270,7 +270,9 @@ const handleRegister = async (e: React.FormEvent) => {
               </h1>
 
               <p className="mt-2 text-gray-500">
-                Daftarkan diri sebagai orang tua
+                {otpSent
+                  ? "Masukkan kode OTP yang dikirim ke email"
+                  : "Daftarkan diri sebagai orang tua"}
               </p>
 
               <form onSubmit={handleRegister} className="mt-8 space-y-5">
@@ -284,7 +286,8 @@ const handleRegister = async (e: React.FormEvent) => {
                     placeholder="Nama lengkap"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full rounded-2xl border border-yellow-300 bg-white px-6 py-4 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    disabled={otpSent}
+                    className="w-full rounded-2xl border border-yellow-300 bg-white px-6 py-4 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100"
                     required
                   />
                 </div>
@@ -294,24 +297,15 @@ const handleRegister = async (e: React.FormEvent) => {
                     Email
                   </label>
 
-                  <div className="flex gap-3">
                   <input
                     type="email"
                     placeholder="email@contoh.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-2xl border border-yellow-300 bg-white px-6 py-4 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    disabled={otpSent}
+                    className="w-full rounded-2xl border border-yellow-300 bg-white px-6 py-4 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100"
                     required
                   />
-                   <button
-                      type="button"
-                      onClick={handleSendOtp}
-                      disabled={sendingOtp}
-                      className="rounded-2xl bg-blue-500 px-5 font-bold text-white transition hover:bg-blue-600 disabled:opacity-60"
-                    >
-                      {sendingOtp ? "..." : otpSent ? "Kirim Ulang" : "Kirim"}
-                    </button>
-                  </div>
                 </div>
 
                 <div>
@@ -324,7 +318,8 @@ const handleRegister = async (e: React.FormEvent) => {
                     placeholder="Masukkan password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-2xl border border-yellow-300 bg-white px-6 py-4 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    disabled={otpSent}
+                    className="w-full rounded-2xl border border-yellow-300 bg-white px-6 py-4 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100"
                     required
                   />
                 </div>
@@ -339,26 +334,36 @@ const handleRegister = async (e: React.FormEvent) => {
                     placeholder="Ulangi password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full rounded-2xl border border-yellow-300 bg-white px-6 py-4 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    disabled={otpSent}
+                    className="w-full rounded-2xl border border-yellow-300 bg-white px-6 py-4 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100"
                     required
                   />
                 </div>
 
                 {otpSent && (
-                <div>
-                  <label className="mb-2 block font-semibold text-gray-800">
-                    Kode OTP
-                  </label>
+                  <div>
+                    <label className="mb-2 block font-semibold text-gray-800">
+                      Kode OTP
+                    </label>
 
-                  <input
-                    type="text"
-                    placeholder="Masukkan 6 digit kode"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="w-full rounded-2xl border border-yellow-300 bg-white px-6 py-4 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                    required
-                  />
-                </div>
+                    <input
+                      type="text"
+                      placeholder="Masukkan kode OTP"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      className="w-full rounded-2xl border border-yellow-300 bg-white px-6 py-4 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                      required
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={resendLoading}
+                      className="mt-3 font-bold text-blue-500 hover:underline disabled:opacity-60"
+                    >
+                      {resendLoading ? "Mengirim ulang..." : "Kirim ulang OTP"}
+                    </button>
+                  </div>
                 )}
 
                 {registerError && (
@@ -372,7 +377,11 @@ const handleRegister = async (e: React.FormEvent) => {
                   disabled={registerLoading}
                   className="w-full rounded-2xl bg-blue-500 py-4 text-lg font-extrabold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {registerLoading ? "Memproses..." : "Daftar"}
+                  {registerLoading
+                    ? "Memproses..."
+                    : otpSent
+                    ? "Verifikasi & Daftar"
+                    : "Kirim OTP"}
                 </button>
               </form>
 

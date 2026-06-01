@@ -40,16 +40,24 @@ export default function AdminLayout({
               href: "/dashboard/admin/pembayaran",
             },
             {
-              label: "Children",
-              href: "/dashboard/admin/data-anak",
-            },
-            {
               label: "Daily Logs",
               href: "/dashboard/admin/daily-log",
             },
             {
               label: "Reports",
               href: "/dashboard/admin/rapor",
+            },
+            {
+              label: "Check-In",
+              href: "/dashboard/admin/kedatangan",
+            },
+            {
+              label: "Check-Out",
+              href:"/dashboard/admin/penjemputan",
+            },
+            {
+              label: "Children",
+              href: "/dashboard/admin/data-anak",
             },
             {
               label: "Parents",

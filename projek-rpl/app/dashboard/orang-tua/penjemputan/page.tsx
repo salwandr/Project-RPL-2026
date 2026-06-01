@@ -79,6 +79,7 @@ export default function PenjemputanOrangTua() {
   const [children, setChildren]       = useState<Child[]>([]);
   const [selectedChild, setSelectedChild] = useState<Child | null>(null);
   const [todayRequest, setTodayRequest]   = useState<PickupRequest | null>(null);
+  const [todayCheckoutTime, setTodayCheckoutTime] = useState<string | null>(null);
   const [history, setHistory]         = useState<PickupRequest[]>([]);
   const [loading, setLoading]         = useState(true);
   const [submitting, setSubmitting]   = useState(false);
@@ -116,6 +117,7 @@ export default function PenjemputanOrangTua() {
   const fetchRequests = async (childId: string) => {
     setLoading(true);
     setTodayRequest(null);
+    setTodayCheckoutTime(null);
     setHistory([]);
     setConfirmed(false);
     setJustApproved(false);
@@ -133,6 +135,16 @@ export default function PenjemputanOrangTua() {
       setTodayRequest(todayReq);
       if (todayReq) setConfirmed(true);
       setHistory(all.filter((r) => r.pickup_date !== today));
+
+      const { data: attendanceData, error: attendanceErr } = await supabase
+        .from("attendance")
+        .select("jam_checkout")
+        .eq("child_id", childId)
+        .eq("date", today)
+        .limit(1);
+      if (attendanceErr) throw attendanceErr;
+      const attendanceRow = attendanceData?.[0];
+      setTodayCheckoutTime(attendanceRow?.jam_checkout ? formatJam(attendanceRow.jam_checkout) : null);
     } catch {
       setError("Gagal memuat data penjemputan.");
     } finally {
@@ -326,6 +338,11 @@ return (
                   {todayRequest.pickup_time && (
                     <>
                       {" · "}Estimasi <strong>{formatJam(todayRequest.pickup_time)}</strong>
+                    </>
+                  )}
+                  {todayCheckoutTime && isApproved && (
+                    <>
+                      {" · "}Pulangan <strong>{todayCheckoutTime}</strong>
                     </>
                   )}
                 </p>

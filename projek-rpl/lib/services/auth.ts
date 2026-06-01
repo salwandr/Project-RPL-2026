@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 
 export async function login(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({
-    email,
+    email: email.trim().toLowerCase(),
     password,
   });
 
@@ -48,8 +48,10 @@ export async function registerParent({
   email: string;
   password: string;
 }) {
+  const cleanEmail = email.trim().toLowerCase();
+
   const { data, error } = await supabase.auth.signUp({
-    email,
+    email: cleanEmail,
     password,
     options: {
       data: {
@@ -60,7 +62,16 @@ export async function registerParent({
   });
 
   if (error) throw error;
+  return data;
+}
 
+export async function resendRegisterOtp(email: string) {
+  const { data, error } = await supabase.auth.resend({
+    type: "signup",
+    email: email.trim().toLowerCase(),
+  });
+
+  if (error) throw error;
   return data;
 }
 
@@ -74,7 +85,7 @@ export async function verifyRegisterOtp({
   fullName: string;
 }) {
   const { data, error } = await supabase.auth.verifyOtp({
-    email,
+    email: email.trim().toLowerCase(),
     token: otp.trim(),
     type: "signup",
   });
