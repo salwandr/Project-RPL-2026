@@ -67,10 +67,6 @@ export default function AdminLayout({
               label: "Teachers",
               href: "/dashboard/admin/pengasuh",
             },
-            {
-              label: "Profile",
-              href: "/dashboard/admin/profile",
-            },
           ].map((item) => (
             <a
               key={item.label}
