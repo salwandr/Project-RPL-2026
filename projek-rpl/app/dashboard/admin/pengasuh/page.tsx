@@ -56,17 +56,22 @@ export default function DataPengasuhPage() {
   }
 
   async function handleDelete(teacherId: string) {
-    const yes = confirm("Delete this teacher?");
+    const yes = confirm("Delete this pengasuh account permanently?");
     if (!yes) return;
 
-    const { error } = await supabase
-      .from("profiles")
-      .delete()
-      .eq("id", teacherId);
+    const res = await fetch("/api/admin/delete-user", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId: teacherId }),
+    });
 
-    if (error) {
-      console.error(error);
-      alert("Failed to delete teacher.");
+    const result = await res.json();
+
+    if (!res.ok) {
+      console.error(result);
+      alert(result.error || "Failed to delete pengasuh account.");
       return;
     }
 

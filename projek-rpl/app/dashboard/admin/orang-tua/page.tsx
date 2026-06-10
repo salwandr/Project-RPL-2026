@@ -59,17 +59,22 @@ export default function DataOrangTuaPage() {
   }
 
   async function handleDelete(parentId: string) {
-    const yes = confirm("Delete this parent?");
+    const yes = confirm("Delete this parent account permanently?");
     if (!yes) return;
 
-    const { error } = await supabase
-      .from("profiles")
-      .delete()
-      .eq("id", parentId);
+    const res = await fetch("/api/admin/delete-user", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId: parentId }),
+    });
 
-    if (error) {
-      console.error(error);
-      alert("Failed to delete parent.");
+    const result = await res.json();
+
+    if (!res.ok) {
+      console.error(result);
+      alert(result.error || "Failed to delete parent account.");
       return;
     }
 
