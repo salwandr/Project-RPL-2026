@@ -132,7 +132,7 @@ export default function LoginPage() {
     <div className="grid min-h-screen grid-cols-1 bg-[#FAFAF7] lg:grid-cols-2">
       <div className="relative hidden overflow-hidden lg:block">
         <img
-          src="/public/loginPhoto.png"
+          src="/loginPhoto.png"
           alt="Daycare"
           className="absolute inset-0 h-full w-full object-cover"
         />
